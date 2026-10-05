@@ -595,6 +595,33 @@ def _set_parent_death_signal() -> None:
         pass
 
 
+def home_hidden(home: str) -> bool:
+    """Whether nothing of ``home`` is visible except bind mounts and the empty directories leading to them.
+
+    Under bubblewrap ``$HOME`` is an empty tmpfs; the host re-exposes read-only only what the worker needs
+    (the Python environment, the adapter and model) when those live under ``$HOME``. Each of those is a
+    mount point (a different device from the tmpfs), so it does not count as the home directory being
+    visible. Without a file-system sandbox the real home shows ordinary files and directories: False.
+    """
+
+    def only_mounts(d: str, depth: int) -> bool:
+        if depth > 64:
+            return False
+        try:
+            names = os.listdir(d)
+        except OSError:  # not readable: nothing visible
+            return True
+        for name in names:
+            q = os.path.join(d, name)
+            if os.path.islink(q) or not (os.path.ismount(q) or (os.path.isdir(q) and only_mounts(q, depth + 1))):
+                return False
+        return True
+
+    if not os.path.isdir(home):
+        return True
+    return only_mounts(home, 0)
+
+
 def self_check(host_home: str | None = None) -> dict[str, Any]:
     """What the worker can observe about its own isolation (reported in ``sandbox_info``)."""
     getuid = getattr(os, "getuid", None)
@@ -611,10 +638,7 @@ def self_check(host_home: str | None = None) -> dict[str, Any]:
     except (OSError, AttributeError):  # no statvfs on Windows
         info["readonly_root"] = None
     if host_home:
-        try:
-            info["home_hidden"] = not os.path.isdir(host_home) or not os.listdir(host_home)
-        except OSError:
-            info["home_hidden"] = True
+        info["home_hidden"] = home_hidden(host_home)
     info["env_keys"] = sorted(os.environ)
     info["threads_env"] = os.environ.get("OMP_NUM_THREADS")
     return info

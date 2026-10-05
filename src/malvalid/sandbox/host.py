@@ -344,11 +344,20 @@ try:
 except OSError:
     out["readonly_root"] = None
 home = sys.argv[1] if len(sys.argv) > 1 else ""
-if home:
+def only_mounts(d, depth):  # same rule as malvalid.sandbox.worker.home_hidden: bind mounts are not "home"
+    if depth > 64:
+        return False
     try:
-        out["home_hidden"] = (not os.path.isdir(home)) or not os.listdir(home)
+        names = os.listdir(d)
     except OSError:
-        out["home_hidden"] = True
+        return True
+    for name in names:
+        q = os.path.join(d, name)
+        if os.path.islink(q) or not (os.path.ismount(q) or (os.path.isdir(q) and only_mounts(q, depth + 1))):
+            return False
+    return True
+if home:
+    out["home_hidden"] = (not os.path.isdir(home)) or only_mounts(home, 0)
 try:
     os.write(int(sys.argv[2]), b"fd-ok")
     out["fd_passing"] = True

@@ -309,3 +309,32 @@ def test_adapter_helper_imports_next_to_adapter_and_via_pythonpath(tmp_path: Pat
     decl = inspect_adapter(adapter, pol)
     with open_model(adapter, pol, declarations=decl) as m:
         np.testing.assert_allclose(m.predict_proba(np.zeros((2, 32), np.float32)), 0.25)
+
+
+def test_home_hidden_helper_without_mounts(tmp_path: Path) -> None:
+    from malvalid.sandbox.worker import home_hidden
+
+    assert home_hidden(str(tmp_path / "missing")) is True
+    home = tmp_path / "home"
+    (home / "a" / "b").mkdir(parents=True)
+    assert home_hidden(str(home)) is True  # only empty directories: nothing to see
+    (home / "a" / "b" / "notes.txt").write_text("private")
+    assert home_hidden(str(home)) is False  # an ordinary file anywhere under home is visible
+
+
+@needs_bwrap
+def test_home_hidden_when_adapter_lives_under_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # A checkout under $HOME (e.g. /home/runner/work/... on CI, ~/Downloads/MalValid for users): bwrap hides
+    # $HOME and re-exposes only the adapter folder read-only, which must still count as "$HOME hidden".
+    home = tmp_path / "home"
+    adapter = make_adapter_dir(home / "work" / "project", "toolbox_adapter")
+    (home / "secret.txt").write_text("private")
+    (home / "Documents").mkdir()
+    (home / "Documents" / "notes.txt").write_text("private")
+    monkeypatch.setenv("HOME", str(home))
+    pol = _pol(scratch_dir=tmp_path / "scratch")
+    decl = inspect_adapter(adapter, pol)
+    with open_model(adapter, pol, declarations=decl) as m:
+        info = m.sandbox_info()
+        assert info["backend"] == "bwrap" and info["home_hidden"] is True
+        assert m.predict_proba(eval_rows(5)).shape == (5,)

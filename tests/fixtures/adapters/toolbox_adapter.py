@@ -6,8 +6,6 @@ behaviour, so one sandboxed worker can serve many tests. Normal toy rows have ``
 
 import os
 import pickle
-import pwd
-import resource
 import signal
 import socket
 import sys
@@ -61,6 +59,11 @@ def _connect():
 
 
 def _probe():
+    # POSIX-only modules, imported here (only the sandbox probe uses them) so that test modules importing
+    # this file can still be collected on Windows, where the sandbox tests are deselected.
+    import pwd
+    import resource
+
     connect = _connect
 
     def write(path):

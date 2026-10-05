@@ -37,7 +37,17 @@ jobs:
           malvalid sandbox-check
           malvalid sandbox-check --json | python -c "import json, sys; b = json.load(sys.stdin)['bwrap']; sys.exit(0 if b['available'] and b['network_isolated'] else 'bwrap sandbox unavailable: ' + str(b))"
       - name: Tests
-        run: python -m pytest tests/unit tests/e2e -q -p no:cacheprovider
+        shell: bash
+        run: python -m pytest tests/unit tests/e2e -q -p no:cacheprovider -rfE 2>&1 | tee pytest.log
+      - name: Report test failures as annotations (job logs need sign-in; annotations are public)
+        if: failure()
+        shell: bash
+        run: |
+          [ -f pytest.log ] || exit 0
+          { grep -E '^(FAILED|ERROR) |Interrupted|^E   ' pytest.log | head -n 60; echo '--- summary ---'; tail -n 15 pytest.log; } > failures.txt || true
+          cat failures.txt >> "$GITHUB_STEP_SUMMARY"
+          msg="$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' failures.txt | awk 'BEGIN{ORS="%0A"} {print}')"
+          echo "::error title=pytest failures::${msg}"
 
   windows:
     # Lightweight: the OS sandbox needs Linux, so this checks that the package installs and that the fast
@@ -58,4 +68,14 @@ jobs:
       - name: Unit tests (no sandbox)
         env:
           PYTHONUTF8: "1"   # as the Windows launcher sets it
-        run: python -m pytest tests/unit -q -p no:cacheprovider -m "not slow and not ember and not sandbox"
+        shell: bash
+        run: python -m pytest tests/unit -q -p no:cacheprovider -m "not slow and not ember and not sandbox" -rfE 2>&1 | tee pytest.log
+      - name: Report test failures as annotations (job logs need sign-in; annotations are public)
+        if: failure()
+        shell: bash
+        run: |
+          [ -f pytest.log ] || exit 0
+          { grep -E '^(FAILED|ERROR) |Interrupted|^E   ' pytest.log | head -n 60; echo '--- summary ---'; tail -n 15 pytest.log; } > failures.txt || true
+          cat failures.txt >> "$GITHUB_STEP_SUMMARY"
+          msg="$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' failures.txt | awk 'BEGIN{ORS="%0A"} {print}')"
+          echo "::error title=pytest failures::${msg}"
