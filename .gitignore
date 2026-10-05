@@ -1,0 +1,96 @@
+# ---- Python environments, caches, build output ------------------------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.ipynb_checkpoints/
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+*.whl
+
+# ---- malvalid run output and local data (never publish) ---------------------------------------
+malvalid-runs/
+malvalid_runs/
+# run output from before the rename to MalValid
+malguard-runs/
+malguard_runs/
+/runs/
+examples/**/runs/
+# canonical corpora and cached feature data
+/corpora/
+/.cache/
+*.npy
+*.npz
+*.parquet
+/*.jsonl
+*.tar.bz2
+*.tar.gz
+*.tgz
+*.zip
+ember2018/
+ember2024/
+
+# ---- logs ---------------------------------------------------------------------------------------
+*.log
+*.log.prev
+
+# ---- generated or downloaded example artifacts (see each example's README for how to fetch them) --
+examples/*/model.json
+examples/*/model.txt
+examples/*/train_sha256.txt
+examples/*/threshold.txt
+# The synthetic demo's small trained model ships so the web UI's "Run the synthetic demo" button
+# works on a fresh clone (python examples/synthetic_demo/train.py regenerates these files).
+!examples/synthetic_demo/model.txt
+!examples/synthetic_demo/train_sha256.txt
+!examples/synthetic_demo/threshold.txt
+examples/*/*.model
+examples/lightgbm_ember2018/ember_model_2018.txt
+examples/**/ember_model_2018.txt
+examples/*/train.log
+*.model
+*.ubj
+*.onnx
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.safetensors
+# NOTE: tests/ fixtures are small JSON files and are intentionally NOT ignored.
+
+# ---- tokens, secrets, local config ---------------------------------------------------------------
+.env
+.env.*
+*.token
+*token.txt
+serve-token
+*.pem
+*.key
+.claude/
+.vscode/
+.idea/
+.DS_Store
+
+# ---- internal build notes and agent scratch (not for the public repo) ------------------------------
+DESIGN.md
+docs/BUILD_CONTRACT.md
+docs/WEB_CONTRACT.md
+# The original build spec. Remove this line if you decide to publish it.
+docs/SPEC.html
+/resume/
+/transcripts/
+*.tar
+*.bak
+*.orig

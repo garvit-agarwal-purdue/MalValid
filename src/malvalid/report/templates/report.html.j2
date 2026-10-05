@@ -1,0 +1,383 @@
+{%- import "_macros.html.j2" as ui with context -%}
+{%- set h = v.header -%}
+{%- set vd = v.verdict -%}
+{%- set g = v.gate -%}
+{%- set co = v.callouts -%}
+{%- set ap = v.appendix -%}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-{{ js_hash }}'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<meta name="generator" content="{{ h.tool }} {{ h.version }}">
+<title>{{ vd.word }}{% if vd.score is not none %} {{ vd.score_text }}/100{% endif %} · {{ h.title }} · {{ h.tool }}</title>
+<style>{{ css }}</style>
+</head>
+<body>
+{{ ui.sprite() }}
+<a class="skip-link" href="#scorecard">Skip to the scorecard</a>
+<header class="topbar">
+<div class="wrap topbar-row">
+<p class="brand"><span class="brand-name">{{ h.tool }}</span><span class="brand-sub">pre-deployment gate for malware detectors</span></p>
+<button id="theme-toggle" class="btn ghost small js-only no-print" type="button" aria-pressed="false" title="Switch between light and dark">{{ ui.icon("i-theme") }}<span>Theme</span></button>
+</div>
+</header>
+
+<main class="wrap" id="top">
+{{ ui.section_error(h) }}
+<div class="title-block">
+<p class="eyebrow">Production-readiness report</p>
+<h1>{{ h.title }}</h1>
+<p class="meta">
+{% if h.model_line %}<span class="meta-item"><span class="muted">Model</span> <strong>{{ h.model_line }}</strong></span>{% endif %}
+{% if h.threshold %}<span class="meta-item"><span class="muted">Operating threshold</span> <strong>{{ h.threshold }}</strong>{% if h.threshold_note %} <span class="muted">{{ h.threshold_note }}</span>{% endif %}</span>{% endif %}
+{% if h.run_id %}<span class="meta-item"><span class="muted">Run</span> <code>{{ h.run_id }}</code></span>{% endif %}
+{% if h.started %}<span class="meta-item"><span class="muted">Started</span> {{ h.started }}</span>{% endif %}
+{% if h.duration %}<span class="meta-item"><span class="muted">Took</span> {{ h.duration }}</span>{% endif %}
+</p>
+{% if h.adapter %}<p class="meta"><span class="muted">Adapter</span> <code class="wrap-any">{{ h.adapter }}</code></p>{% endif %}
+{% if not h.schema_ok %}<p class="callout tone-warning small">{{ ui.icon("i-warn") }}<span>This report declares schema <code>{{ h.schema }}</code>; this renderer targets <code>malvalid-report/1</code>, so some sections may be incomplete.</span></p>{% endif %}
+{% if v.empty %}<p class="callout tone-warning">{{ ui.icon("i-warn") }}<span>The report is empty: there is nothing to show.</span></p>{% endif %}
+</div>
+
+{# ---------------------------------------------------------------- (1) verdict banner #}
+<section class="verdict tone-{{ vd.tone }}" aria-labelledby="verdict-word">
+{{ ui.section_error(vd) }}
+<div class="verdict-main">
+<div class="verdict-id">
+<span class="verdict-icon">{{ ui.icon(vd.icon, "xl") }}</span>
+<div>
+<p class="eyebrow">Verdict</p>
+<h2 class="verdict-word" id="verdict-word">{{ vd.word }}</h2>
+{% if vd.label %}<p class="verdict-label">{{ vd.label }}</p>{% endif %}
+</div>
+</div>
+<div class="score" aria-label="Production-readiness score {{ vd.score_text }} out of 100">
+<p class="eyebrow">Production-readiness score</p>
+<p class="score-line"><span class="score-num">{{ vd.score_text }}</span><span class="score-den">/100</span></p>
+{% if vd.capped and vd.raw is not none %}<p class="score-cap">capped at {{ vd.cap|num }} (uncapped {{ vd.raw|num(3) }})</p>{% endif %}
+</div>
+</div>
+<p class="verdict-meaning">{{ vd.meaning }}</p>
+{% if vd.isolation_warning %}<p class="callout tone-warning small" data-isolation="{{ vd.isolation }}">{{ ui.icon("i-warn") }}<span><strong>Isolation: {{ vd.isolation }}.</strong> {{ vd.isolation_warning }}</span></p>{% endif %}
+
+<div class="scale" role="img" aria-label="Score {{ vd.score_text }} on a 0 to 100 scale. Not ready below {{ vd.cond_min|num }}, conditional from {{ vd.cond_min|num }}, ready from {{ vd.ready_min|num }}.">
+<div class="scale-track">
+<span class="band band-serious" style="left: 0%; width: {{ vd.cond_min }}%"></span>
+<span class="band band-warning" style="left: {{ vd.cond_min }}%; width: {{ vd.ready_min - vd.cond_min }}%"></span>
+<span class="band band-good" style="left: {{ vd.ready_min }}%; width: {{ 100 - vd.ready_min }}%"></span>
+{% if vd.show_cap %}<span class="cap-mark" style="left: {{ vd.cap }}%"><span class="cap-lbl">blocked cap {{ vd.cap|num }}</span></span>{% endif %}
+{% if vd.raw_pos is not none %}<span class="marker marker-raw" style="left: {{ vd.raw_pos }}%" title="uncapped score {{ vd.raw|num(3) }}"></span>{% endif %}
+{% if vd.score_pos is not none %}<span class="marker" style="left: {{ vd.score_pos }}%"></span>{% endif %}
+</div>
+<div class="scale-labels">
+<span style="left: 0%">0</span>
+<span style="left: {{ vd.cond_min }}%">{{ vd.cond_min|num }}</span>
+<span style="left: {{ vd.ready_min }}%">{{ vd.ready_min|num }}</span>
+<span style="left: 100%">100</span>
+</div>
+<div class="scale-names">
+<span style="left: {{ vd.cond_min / 2 }}%">Not ready</span>
+<span style="left: {{ (vd.cond_min + vd.ready_min) / 2 }}%">Conditional</span>
+<span style="left: {{ (vd.ready_min + 100) / 2 }}%">Ready</span>
+</div>
+</div>
+
+<div class="verdict-facts">
+<div class="fact">
+<p class="eyebrow">Coverage</p>
+{% if vd.coverage is not none %}
+<p class="fact-val">{{ vd.coverage|pct }} <span class="muted small">of the weighted battery evaluated</span></p>
+<span class="meter wide" role="img" aria-label="coverage {{ vd.coverage|pct }}"><span class="meter-track"><span class="meter-fill neutral" style="width: {{ [[vd.coverage * 100, 0]|max, 100]|min }}%"></span>{% if vd.min_coverage is not none %}<span class="meter-pass" style="left: {{ [[vd.min_coverage * 100, 0]|max, 100]|min }}%" title="Ready needs at least {{ vd.min_coverage|pct }} coverage"></span>{% endif %}</span></span>
+{% if vd.min_coverage is not none %}<p class="muted small">A Ready verdict needs at least {{ vd.min_coverage|pct }} coverage.</p>{% endif %}
+{% else %}<p class="fact-val muted">—</p>{% endif %}
+</div>
+{% if vd.summary %}<div class="fact fact-wide"><p class="eyebrow">Summary</p><p>{{ vd.summary }}</p></div>{% endif %}
+</div>
+
+{% if vd.blockers %}
+<div class="reasons blockers">
+<h3 class="h3">{{ ui.icon("i-block") }} Blocking issues</h3>
+<ul>{% for b in vd.blockers %}<li>{{ b }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+{% if vd.reasons %}
+<div class="reasons">
+<h3 class="h3">{{ ui.icon("i-info") }} {% if vd.blockers %}Other reasons{% else %}Why this verdict{% endif %}</h3>
+<ul>{% for r in vd.reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+<p class="verdict-disclaimer muted small">A verdict is evidence for a promotion decision, not a certification. See <a href="#disclaimers">disclaimers</a>.</p>
+</section>
+
+{# ---------------------------------------------------------------- (2) hard-gate strip #}
+<section class="gates" aria-labelledby="gates-h">
+{{ ui.section_error(g) }}
+<h2 class="h-strip" id="gates-h">Hard gates</h2>
+{% if g.hard %}
+<ul class="gate-list">
+{% for x in g.hard %}
+<li>{% if x.anchor %}<a class="gate-chip tone-{{ x.tone }}" href="#{{ x.anchor }}">{% else %}<span class="gate-chip tone-{{ x.tone }}">{% endif %}{{ ui.icon(x.icon) }}<span class="code">{{ x.code }}</span><span class="gate-title">{{ x.title }}</span><span class="gate-state">{{ x.outcome_label }}{% if x.status_label in ("Error", "Skipped") %} · {{ x.status_label }}{% endif %}</span>{% if x.anchor %}</a>{% else %}</span>{% endif %}</li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="muted small">No hard gates are configured.</p>
+{% endif %}
+<p class="exit tone-{{ g.exit_tone }}"><span class="muted">Exit code</span> <strong>{{ g.exit_code }}</strong>{% if g.exit_meaning %} — {{ g.exit_meaning }}{% endif %}{% if g.fail_on %} <span class="muted">(--fail-on {{ g.fail_on }})</span>{% endif %}</p>
+{% if g.aborted %}<p class="callout tone-critical">{{ ui.icon("i-block") }}<span><strong>Run aborted by M0 before the model was loaded:</strong> {{ g.aborted }}</span></p>{% endif %}
+{% if g.load_error %}<p class="callout tone-critical">{{ ui.icon("i-error") }}<span><strong>The model could not be loaded:</strong> {{ g.load_error }}</span></p>{% endif %}
+{% if g.disabled %}<p class="muted small">Disabled in the gate configuration (not run, not counted): {% for d in g.disabled %}<code>{{ d }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+{% if g.deselected %}<p class="callout tone-warning">{{ ui.icon("i-warn") }}<span><strong>Partial run.</strong> Enabled in the gate configuration but deselected with <code>--only</code>/<code>--skip</code>: {% for d in g.deselected %}<code>{{ d }}</code>{% if not loop.last %}, {% endif %}{% endfor %}. They are reported as skipped, so they lower coverage, and a deselected hard gate blocks the verdict.</span></p>{% endif %}
+</section>
+
+{# ---------------------------------------------------------------- callouts #}
+{% if co.synthetic %}
+<p class="callout tone-warning">{{ ui.icon("i-warn") }}<span><strong>Synthetic corpus{% if co.corpus_name %} ({{ co.corpus_name }}){% endif %}.</strong> These numbers exercise the pipeline; they are not evidence about real-world performance.</span></p>
+{% endif %}
+{% if co.corpus_error %}
+<p class="callout tone-warning">{{ ui.icon("i-warn") }}<span><strong>Canonical corpus unavailable:</strong> {{ co.corpus_error }} Tests that need the feature space were skipped.</span></p>
+{% endif %}
+{% if co.warnings %}
+<div class="callout tone-warning run-warnings">{{ ui.icon("i-warn") }}<div><strong>Run warnings ({{ co.warnings|length }})</strong><ul>{% for w in co.warnings %}<li>{{ w }}</li>{% endfor %}</ul></div></div>
+{% endif %}
+
+{# ---------------------------------------------------------------- (3) per-axis scorecard #}
+<section class="card" id="scorecard" aria-labelledby="scorecard-h">
+<div class="section-head">
+<h2 id="scorecard-h">Per-axis scorecard</h2>
+<p class="muted small">One row per test, in run order. An axis score of {{ v.pass_line }} means the metric sits exactly on its threshold; below {{ v.pass_line }} that gate fails.</p>
+</div>
+{% if v.modules_error %}<p class="callout tone-warning small">{{ ui.icon("i-warn") }}<span>{{ v.modules_error }}</span></p>{% endif %}
+{% if v.modules %}
+<div class="table-wrap">
+<table class="scorecard">
+<thead><tr><th scope="col">Test</th><th scope="col">Status</th><th scope="col">Gate</th><th scope="col">Axis score</th><th scope="col">Key metric vs threshold</th></tr></thead>
+<tbody>
+{% for m in v.modules %}
+<tr class="row-{{ m.status }}">
+<td data-label="Test"><div class="cell"><a class="sc-test" href="#{{ m.anchor }}"><span class="code">{{ m.code }}</span><span>{{ m.title }}</span></a>{% if m.screening %} {{ ui.screening_badge() }}{% endif %}</div></td>
+<td data-label="Status"><div class="cell">{{ ui.chip(m.tone, m.status_icon, m.status_label) }}</div></td>
+<td data-label="Gate"><div class="cell">{{ ui.gate_badge(m.gate) }}<span class="muted small sc-outcome">{{ m.outcome_label }}</span></div></td>
+<td data-label="Axis score"><div class="cell">
+{% if m.unscored %}<span class="muted small">precondition · not scored</span>
+{% else %}{{ ui.meter(m.score, v.pass_line) }}{% if m.weight is not none %}<span class="muted small sc-weight">weight {{ m.weight|num }}{% if not m.counted %} · not counted{% endif %}</span>{% endif %}{% endif %}
+</div></td>
+<td data-label="Key metric"><div class="cell">
+{% if m.status == "skipped" %}<span class="muted">Not run — {{ m.skip_reason or m.finding }}</span>
+{% elif m.status == "error" %}<span class="err-text">{{ m.finding or "module crashed" }}</span>
+{% elif m.primary %}<span class="keymetric">{{ ui.icon("i-pass" if m.primary.passed is sameas true else ("i-fail" if m.primary.passed is sameas false else "i-unknown")) }}<code>{{ m.primary.metric }}</code> <strong>{{ m.primary.value }}</strong> <span class="muted">{{ m.primary.op }} {{ m.primary.threshold }}</span></span>{% if m.checks|length > 1 %} <span class="muted small">+{{ m.checks|length - 1 }} more</span>{% endif %}
+{% else %}<span class="muted">no gated metric</span>{% endif %}
+</div></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="muted small foot">The headline score is the weighted mean of axis scores over the tests that ran{% if v.total_weight %} (total counted weight {{ v.total_weight|num }}){% endif %}. Skipped tests never count as passes; they lower coverage. Weights and bands are policy in <code>gate.yaml</code> (<code>verdict:</code>).</p>
+{% else %}
+<p class="muted">No test results were recorded.</p>
+{% endif %}
+</section>
+
+{# ---------------------------------------------------------------- (4) module sections #}
+{% for m in v.modules %}
+<section class="card module status-{{ m.status }}" id="{{ m.anchor }}" aria-labelledby="{{ m.anchor }}-h">
+{{ ui.section_error(m) }}
+<header class="module-head">
+<div class="mh-title"><span class="code-pill">{{ m.code }}</span><h2 id="{{ m.anchor }}-h">{{ m.title }}</h2></div>
+<div class="mh-badges">
+{{ ui.chip(m.tone, m.status_icon, m.status_label) }}
+{{ ui.gate_badge(m.gate) }}
+{% if m.outcome_label and m.status not in ("skipped", "error") %}<span class="badge">{{ m.outcome_label }}</span>{% endif %}
+{% if m.screening %}{{ ui.screening_badge() }}{% endif %}
+{% if not m.unscored and m.score is not none %}<span class="badge score-badge">axis score <strong>{{ m.score|num(3) }}</strong></span>{% endif %}
+</div>
+</header>
+{% if m.blurb %}<p class="blurb">{{ m.blurb }}</p>{% endif %}
+
+{% if m.status == "skipped" %}
+<div class="callout tone-neutral">{{ ui.icon("i-skip") }}<div>
+<p><strong>Not run:</strong> {{ m.skip_reason or m.finding or "no reason recorded" }}</p>
+<p class="small">Skipped tests never count as passes; they lower the verdict's coverage.</p>
+{% if m.skip_help %}<p class="small"><strong>To enable it:</strong> {{ m.skip_help }}</p>{% endif %}
+</div></div>
+{% elif m.status == "error" %}
+<div class="callout tone-critical">{{ ui.icon("i-error") }}<div>
+<p><strong>This test crashed</strong>, so its gate was not evaluated and the run is blocked.</p>
+{% if m.finding %}<p class="mono-ish">{{ m.finding }}</p>{% endif %}
+{% if m.partial %}<p class="small">Charts and tables it produced before the error are shown below for debugging; they do not count toward the score.</p>{% endif %}
+</div></div>
+{% if m.error %}
+<details class="traceback">
+<summary>Traceback{% if m.error_head %} — <code>{{ m.error_head }}</code>{% endif %}</summary>
+<pre class="code">{{ m.error }}</pre>
+</details>
+{% endif %}
+{% else %}
+{% if m.finding %}<p class="finding">{{ m.finding }}</p>{% endif %}
+{% endif %}
+
+{% if m.screening and m.screening_text %}<p class="screening-note">{{ ui.icon("i-screen") }}<span>{{ m.screening_text }}</span></p>{% endif %}
+
+{% if m.notes %}
+<ul class="notes">{% for n in m.notes %}<li>{{ ui.icon("i-info") }}<span>{{ n }}</span></li>{% endfor %}</ul>
+{% endif %}
+
+{% if m.checks %}
+<h3 class="h3">Checks</h3>
+<div class="table-wrap">
+<table class="data checks">
+<thead><tr><th scope="col">Check</th><th scope="col">Rule</th><th scope="col" class="num">Value</th><th scope="col">Result</th><th scope="col">Score</th></tr></thead>
+<tbody>
+{% for c in m.checks %}
+<tr>
+<td><code>{{ c.name }}</code>{% if c.description %}<div class="muted small">{{ c.description }}</div>{% endif %}</td>
+<td><code class="rule">{{ c.metric }} {{ c.op }} {{ c.threshold }}</code>{% if c.floor or c.ideal %}<div class="muted small">score 0 at {{ c.floor or "—" }}, {{ v.pass_line }} at {{ c.threshold }}, 100 at {{ c.ideal or "—" }}{% if c.scale == "log" %} (log scale){% endif %}</div>{% endif %}</td>
+<td class="num"><strong>{{ c.value }}</strong></td>
+<td>{{ ui.result(c.passed) }}</td>
+<td>{{ ui.meter(c.score, v.pass_line) }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+
+{% if m.metrics %}
+<h3 class="h3">Metrics</h3>
+<dl class="metrics">
+{% for x in m.metrics %}<div class="metric{% if x.gated %} gated{% endif %}"><dt>{{ x.k }}</dt><dd>{{ x.v }}</dd></div>
+{% endfor %}
+</dl>
+{% endif %}
+
+{% if m.charts %}
+<div class="charts">
+{% for c in m.charts %}{{ ui.chart(c) }}
+{% endfor %}
+</div>
+{% endif %}
+
+{% for t in m.tables %}{{ ui.data_table(t) }}
+{% endfor %}
+
+{% for o in m.others %}
+<div class="artifact-other"><h3 class="h3">{{ o.title }} <code class="chart-key">{{ o.key }}</code></h3>{{ o.html }}</div>
+{% endfor %}
+
+{% if m.missing_artifacts %}<p class="muted small">Artifacts referenced but missing from the report: {% for k in m.missing_artifacts %}<code>{{ k }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+
+{% if m.details_html %}
+<details class="more"><summary>Details</summary><div class="more-body">{{ m.details_html }}</div></details>
+{% endif %}
+{% if m.params %}
+<details class="more"><summary>Parameters used</summary><div class="more-body">
+<table class="kvt"><tbody>{% for p in m.params %}<tr><th scope="row"><code>{{ p.k }}</code></th><td>{{ p.v }}</td></tr>{% endfor %}</tbody></table>
+</div></details>
+{% endif %}
+<p class="module-foot muted small">{% if m.id %}<code>{{ m.id }}</code>{% endif %}{% if m.duration %} · took {{ m.duration }}{% endif %}{% if m.seed is not none and m.seed != "" %} · seed {{ m.seed }}{% endif %} · <a href="#scorecard">back to scorecard</a></p>
+</section>
+{% endfor %}
+
+{% if v.extra_artifacts %}
+<section class="card" id="other-artifacts" aria-labelledby="other-artifacts-h">
+<h2 id="other-artifacts-h">Other artifacts</h2>
+<p class="muted small">Charts and tables in the report that no test result claims.</p>
+{% set charts = v.extra_artifacts|selectattr("type", "equalto", "chart")|list %}
+{% if charts %}<div class="charts">{% for c in charts %}{{ ui.chart(c) }}{% endfor %}</div>{% endif %}
+{% for t in v.extra_artifacts|selectattr("type", "equalto", "table") %}{{ ui.data_table(t) }}{% endfor %}
+{% for o in v.extra_artifacts|selectattr("type", "equalto", "other") %}<div class="artifact-other"><h3 class="h3">{{ o.title }} <code class="chart-key">{{ o.key }}</code></h3>{{ o.html }}</div>{% endfor %}
+</section>
+{% endif %}
+
+{# ---------------------------------------------------------------- (5) appendix #}
+<section class="card appendix" id="appendix" aria-labelledby="appendix-h">
+<h2 id="appendix-h">Appendix: reproducibility</h2>
+{{ ui.section_error(ap) }}
+<div class="app-grid">
+<div class="app-block">
+<h3 class="h3">Model &amp; declarations</h3>
+{{ ui.kv_table(ap.model_rows) }}
+{% if ap.tree_rows %}<h4 class="h4">Tree access</h4>{{ ui.kv_table(ap.tree_rows) }}{% endif %}
+</div>
+<div class="app-block">
+<h3 class="h3">Training manifest</h3>
+{{ ui.kv_table(ap.tm_rows) }}
+{% if ap.tm_warnings %}<ul class="notes">{% for w in ap.tm_warnings %}<li>{{ ui.icon("i-warn") }}<span>{{ w }}</span></li>{% endfor %}</ul>{% endif %}
+<h3 class="h3">Feature schema</h3>
+{{ ui.kv_table(ap.schema_rows) }}
+</div>
+</div>
+
+<h3 class="h3">Model artifacts</h3>
+{% if ap.artifacts %}
+<div class="table-wrap"><table class="data">
+<thead><tr><th scope="col">Path</th><th scope="col">sha256</th><th scope="col" class="num">Size</th><th scope="col">Format</th><th scope="col">Pickle</th></tr></thead>
+<tbody>{% for a in ap.artifacts %}<tr><td class="mono wrap-any">{{ a.path }}</td><td class="mono hash">{{ a.sha256 or "—" }}</td><td class="num">{{ a.size }}</td><td>{{ a.format or "—" }}</td><td>{% if a.pickle is sameas true %}{{ ui.chip("warning", "i-warn", "pickle") }}{% elif a.pickle is sameas false %}no{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="muted small">No artifacts recorded.</p>{% endif %}
+
+<h3 class="h3">Canonical corpus</h3>
+{% if ap.content_hash %}<p class="hash-line"><span class="muted">content hash</span> <code class="hash">{{ ap.content_hash }}</code></p>{% endif %}
+<div class="app-grid">
+<div class="app-block">{{ ui.kv_table(ap.corpus_rows) }}</div>
+<div class="app-block">
+{% if ap.splits %}
+<div class="table-wrap"><table class="data">
+<thead><tr><th scope="col">Split</th><th scope="col" class="num">Rows</th><th scope="col" class="num">Malicious</th><th scope="col" class="num">Benign</th><th scope="col" class="num">Unlabeled</th></tr></thead>
+<tbody>{% for s in ap.splits %}<tr><td>{{ s.name }}</td><td class="num">{{ s.n }}</td><td class="num">{{ s.malicious }}</td><td class="num">{{ s.benign }}</td><td class="num">{{ s.unlabeled }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% if ap.roles %}<table class="kvt"><tbody>{% for r in ap.roles %}<tr><th scope="row">role <code>{{ r.role }}</code></th><td>{{ r.splits }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+</div>
+</div>
+
+<div class="app-grid">
+<div class="app-block">
+<h3 class="h3">Sandbox</h3>
+{% if ap.sandbox_flag %}<p class="callout tone-warning small">{{ ui.icon("i-warn") }}<span>{{ ap.sandbox_flag }}</span></p>{% endif %}
+{% if ap.sandbox_html %}{{ ap.sandbox_html }}{% else %}<p class="muted small">Not recorded in this report.</p>{% endif %}
+</div>
+<div class="app-block">
+<h3 class="h3">Environment</h3>
+{{ ui.kv_table(ap.env_rows) }}
+{% if ap.libs %}
+<table class="kvt libs"><tbody>{% for l in ap.libs %}<tr><th scope="row">{{ l.name }}</th><td{% if l.missing %} class="muted"{% endif %}>{{ l.version }}</td></tr>{% endfor %}</tbody></table>
+{% endif %}
+</div>
+</div>
+
+<h3 class="h3">Run &amp; seeds</h3>
+<div class="app-grid">
+<div class="app-block">{{ ui.kv_table(ap.run_rows) }}</div>
+<div class="app-block">
+{% if ap.seeds %}
+<div class="table-wrap"><table class="data">
+<thead><tr><th scope="col">Test</th><th scope="col" class="num">Seed</th><th scope="col" class="num">Duration</th></tr></thead>
+<tbody>{% for s in ap.seeds %}<tr><td><span class="code">{{ s.code }}</span> {{ s.title }}</td><td class="num mono">{{ s.seed }}</td><td class="num">{{ s.duration }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+</div>
+</div>
+
+{% if ap.config_text %}
+<details class="more"><summary>Gate configuration (as resolved for this run)</summary><div class="more-body"><pre class="code">{{ ap.config_text }}</pre></div></details>
+{% endif %}
+
+<h3 class="h3" id="disclaimers">Disclaimers</h3>
+<ul class="disclaimers">
+{% for d in ap.disclaimers %}<li>{{ d }}</li>{% endfor %}
+<li>This page is self-contained: it makes no network requests, and a Content-Security-Policy blocks any that were attempted.</li>
+</ul>
+</section>
+</main>
+
+<footer class="wrap footer muted small">
+<p>Generated by {{ h.tool }}{% if h.version %} {{ h.version }}{% endif %}{% if h.schema %} · report schema <code>{{ h.schema }}</code>{% endif %} · the machine-readable <code>report.json</code> next to this file is the source of truth.</p>
+</footer>
+<script type="application/json" id="mg-chart-data">{{ v.chart_json }}</script>
+<script>{{ js }}</script>
+</body>
+</html>

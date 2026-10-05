@@ -1,0 +1,56 @@
+{%- import "_ui.html.j2" as ui -%}
+{%- set nav_items = [
+  ("dashboard", "/", "Dashboard", "i-grid"),
+  ("new", "/runs/new", "New run", "i-plus"),
+  ("compare", "/compare", "Compare", "i-columns"),
+  ("corpora", "/corpora", "Corpora", "i-db"),
+  ("modules", "/modules", "Modules", "i-list"),
+  ("system", "/system", "System", "i-cpu"),
+] -%}
+{%- set asset_v = (app_version or "dev")|string|urlencode -%}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<meta name="csrf-token" content="{{ csrf_token or '' }}">
+<meta name="root-path" content="{{ root }}">
+<title>{% block title %}MalValid{% endblock %} · MalValid</title>
+<link rel="icon" href="{{ root }}/static/favicon.svg?v={{ asset_v }}" type="image/svg+xml">
+<link rel="stylesheet" href="{{ root }}/static/app.css?v={{ asset_v }}">
+<script src="{{ root }}/static/app.js?v={{ asset_v }}"></script>
+{% block head %}{% endblock %}
+</head>
+<body data-page="{{ nav_active or '' }}">
+{{- ""|autoescape_guard }}
+{{ ui.sprite() }}
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="topbar">
+<div class="wrap topbar-row">
+<a class="brand" href="{{ root }}/">{{ ui.icon("i-shield") }}<span class="brand-name">MalValid</span><span class="brand-sub">pre-deployment gate for malware detectors</span></a>
+<nav class="nav" aria-label="Main">
+<ul>
+{% for key, href, label, ic in nav_items %}<li><a href="{{ root }}{{ href }}"{% if nav_active == key %} aria-current="page"{% endif %}>{{ ui.icon(ic) }}<span>{{ label }}</span></a></li>
+{% endfor %}
+</ul>
+</nav>
+<div class="topbar-tools">
+<button id="theme-toggle" class="btn ghost small icon-btn js-only" type="button" aria-pressed="false" title="Switch between light and dark">{{ ui.icon("i-theme") }}<span class="visually-hidden">Dark theme</span></button>
+</div>
+</div>
+</header>
+<main id="main" class="wrap" tabindex="-1">
+{% block content %}{% endblock %}
+</main>
+<footer class="footer">
+<div class="wrap">
+<span>MalValid {{ app_version or "" }}</span>
+{% if bind %}<span>Local UI on <code>{{ bind }}</code></span>{% endif %}
+{% if runs_dir %}<span>Runs in <code class="wrap-any">{{ runs_dir }}</code></span>{% endif %}
+<span>Single-user and local: whoever has this page's link can run models on this machine, so keep it private.</span>
+</div>
+</footer>
+</body>
+</html>

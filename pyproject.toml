@@ -1,0 +1,122 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "malvalid"
+version = "0.1.0"
+description = "Pre-deployment reliability and security gate for malware-detection models: a CLI and local web UI that scores a model 0-100 and returns a verdict"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Garvit Agarwal" }]
+keywords = ["malware", "machine-learning", "security", "evaluation", "ci"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "Topic :: Security",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Operating System :: POSIX :: Linux",
+]
+
+# Compatible ranges here; exact, tested pins live in constraints/lock-py311.txt
+# (from a source checkout: `pip install -c constraints/lock-py311.txt -e .`).
+dependencies = [
+  "numpy>=1.26,<3",
+  "scipy>=1.11,<2",
+  "scikit-learn>=1.4,<2",
+  "lightgbm>=4.3,<5",
+  "xgboost>=2.0,<4",
+  "shap>=0.45,<1",
+  "adversarial-robustness-toolbox>=1.17,<2",
+  "modelscan>=0.8,<1",
+  "jinja2>=3.1,<4",
+  "pyyaml>=6,<7",
+  "typer>=0.12,<1",
+  "pydantic>=2.6,<3",
+  "rich>=13,<16",
+]
+
+[project.urls]
+Homepage = "https://github.com/garvit-agarwal-purdue/MalValid"
+Source = "https://github.com/garvit-agarwal-purdue/MalValid"
+Issues = "https://github.com/garvit-agarwal-purdue/MalValid/issues"
+Changelog = "https://github.com/garvit-agarwal-purdue/MalValid/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+# ONNX model artifacts.
+onnx = ["onnx>=1.15,<2", "onnxruntime>=1.17,<2"]
+# Raw PE -> feature vector extraction (FeatureSchema.featurize) without an adapter featurize().
+featurize = ["lief>=0.14,<1", "pefile>=2023.2.7,<2027"]
+# Local web UI (`malvalid serve`): submit models, watch runs, browse and compare verdicts.
+web = ["starlette>=0.37,<1", "uvicorn>=0.29,<1", "python-multipart>=0.0.9,<1"]
+dev = ["pytest>=8", "skl2onnx>=1.16", "onnx>=1.15,<2", "onnxruntime>=1.17,<2", "httpx>=0.27,<1",
+       "starlette>=0.37,<1", "uvicorn>=0.29,<1", "python-multipart>=0.0.9,<1"]
+# NOTE: TESSERACT (s2labres/tesseract-ml-release) pins numpy==1.22.4 and cannot be resolved alongside
+# modern numpy. malvalid vendors its BSD-3 temporal-split helpers (malvalid/_vendor/tesseract_temporal.py)
+# and uses an installed `tesseract` package when present. Install it with:
+#   pip install --no-deps "tesseract @ git+https://github.com/s2labres/tesseract-ml-release@05132c83eccaa0be24b5403bfe9a73c22199ddef"
+
+[project.scripts]
+malvalid = "malvalid.cli:main"
+
+[project.entry-points."malvalid.modules"]
+dummy = "malvalid.modules.dummy:DummyModule"
+file_safety = "malvalid.modules.file_safety:FileSafetyModule"
+performance = "malvalid.modules.performance:PerformanceModule"
+drift = "malvalid.modules.drift:DriftModule"
+membership_inf = "malvalid.modules.membership:MembershipInferenceModule"
+backdoor_screen = "malvalid.modules.backdoor:BackdoorScreenModule"
+extraction = "malvalid.modules.extraction:ExtractionModule"
+explanation = "malvalid.modules.explanation:ExplanationModule"
+
+[project.entry-points."malvalid.feature_schemas"]
+ember_v2 = "malvalid.schemas.ember_v2:EmberV2Schema"
+ember_v3 = "malvalid.schemas.ember_v3:EmberV3Schema"
+
+[project.entry-points."malvalid.corpora"]
+ember_v2_2018 = "malvalid.corpora.ember2018:Ember2018Provider"
+ember_v3_2024 = "malvalid.corpora.ember2024:Ember2024Provider"
+synthetic_v2 = "malvalid.corpora.synthetic:SyntheticEmberV2Provider"
+synthetic_v3 = "malvalid.corpora.synthetic:SyntheticEmberV3Provider"
+
+[project.entry-points."malvalid.model_loaders"]
+lightgbm = "malvalid.loaders.lightgbm_loader:LightGBMLoader"
+xgboost = "malvalid.loaders.xgboost_loader:XGBoostLoader"
+sklearn_gbdt = "malvalid.loaders.sklearn_loader:SklearnLoader"
+onnx = "malvalid.loaders.onnx_loader:ONNXLoader"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/malvalid"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "examples/",
+  "/examples/**",  # also the demo model files that .gitignore re-includes for the repository
+  ".venv/",
+  "malvalid-runs/",
+  "malguard-runs/",
+  "__pycache__/",
+  # internal build notes and the build-time product spec (not part of the release)
+  "/DESIGN.md",
+  "/docs/BUILD_CONTRACT.md",
+  "/docs/WEB_CONTRACT.md",
+  "/docs/SPEC.html",
+  "/*build spec*.html",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "slow: long-running tests (deselect with -m 'not slow')",
+  "ember: requires the real EMBER canonical corpora (MALVALID_CORPUS_DIR and the MALVALID_EMBER2018_* / MALVALID_EMBER2024_* variables)",
+  "web: local web UI tests (requires the [web] extra)",
+  "sandbox: needs an OS sandbox backend (bubblewrap or user namespaces; deselected on Windows CI)",
+  "posix: needs POSIX process groups, signals, file modes or symlinks (skipped on Windows)",
+]
+filterwarnings = [
+  "ignore:PyTorch not found:UserWarning",
+]

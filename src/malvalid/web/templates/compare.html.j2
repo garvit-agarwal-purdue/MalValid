@@ -1,0 +1,119 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% set runs = runs or [] %}
+{% set rows = rows or [] %}
+{% set config_diff = config_diff or [] %}
+{% set ncol = runs|length + 1 %}
+{% block title %}Compare runs{% endblock %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>Compare runs</h1>
+<p class="lede">Verdicts, per-test results and gate-policy differences side by side{% if runs|length > 1 %} for {{ runs|length }} runs{% endif %}. Runs are only comparable when they used the same corpus and policy; differences are listed at the bottom.</p>
+</div>
+<div class="btn-row"><a class="btn" href="{{ root }}/">{{ ui.icon("i-grid") }}<span>Change the selection</span></a></div>
+</div>
+
+{% set cmp_errors = (errors or [])|select|list %}
+{% if cmp_errors %}<div class="callout {{ "tone-critical" if runs|length < 2 else "tone-warning" }}" role="status" data-compare-errors>{{ ui.icon("i-error" if runs|length < 2 else "i-warn") }}<div>{% if cmp_errors|length == 1 %}<p>{{ cmp_errors[0][:1]|upper }}{{ cmp_errors[0][1:] }}.</p>{% else %}<ul>{% for e in cmp_errors %}<li>{{ e[:1]|upper }}{{ e[1:] }}.</li>{% endfor %}</ul>{% endif %}</div></div>{% endif %}
+
+{% if runs|length < 2 %}
+<section class="empty" aria-labelledby="empty-h">
+<h2 id="empty-h">{% if runs %}Pick at least one more run{% else %}Pick the runs to compare{% endif %}</h2>
+<p class="lede">On the dashboard, tick 2 to 6 runs that have a verdict, then choose <strong>Compare selected</strong>. Queued, running and failed runs have no report to compare yet.</p>
+{% if runs %}<p>Selected so far: <a href="{{ root }}/runs/{{ (runs[0].run_id or '')|urlencode }}">{{ runs[0]|run_name }}</a>.</p>{% endif %}
+<div class="btn-row"><a class="btn primary" href="{{ root }}/">{{ ui.icon("i-grid") }}<span>Go to the dashboard</span></a></div>
+</section>
+{% else %}
+{% set corpora_used = runs|map(attribute="corpus")|select|unique|list %}
+{% set pkeys = policy_keys or [] %}
+{% set comparable = best_comparable is not sameas false %}
+{% set best_id = best_run_id if comparable else none %}
+{% if corpora_used|length > 1 %}
+<p class="callout tone-warning" data-corpus-mismatch>{{ ui.icon("i-warn") }}<span><strong>These runs were evaluated on different corpora</strong> ({{ corpora_used|join(", ") }}), so their scores and metrics are not directly comparable, and no run is marked as the highest score.</span></p>
+{% endif %}
+{% if pkeys %}
+<div class="callout tone-warning" data-policy-mismatch>{{ ui.icon("i-warn") }}<div><p><strong>These runs used different gate policies, so their verdicts and scores are not comparable.</strong> A run can score higher only because its thresholds were looser. No run is marked as the highest score. Differing policy settings: {% for k in pkeys[:6] %}<code>{{ k|break_dots }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% if pkeys|length > 6 %} and {{ pkeys|length - 6 }} more{% endif %} (all differences are listed at the bottom).</p></div></div>
+{% endif %}
+{% if verdict_lines %}
+<section class="card cmp-summary" aria-labelledby="cmp-sum-h" data-verdict-summary>
+<h2 id="cmp-sum-h">{% if comparable %}Which is safer to ship{% else %}Verdicts at a glance{% endif %}</h2>
+<ul class="plain-list">
+{% for v in verdict_lines %}{% set r = runs[loop.index0] if loop.index0 < runs|length else {} %}
+<li>{{ ui.verdict_chip(v.verdict) }} <a href="{{ root }}/runs/{{ (v.run_id or '')|urlencode }}">{{ r|run_name }}</a>&#8288;: {{ v.text }}{% if v.why %}, because {{ v.why }}{% endif %}.{% if best_id and v.run_id == best_id %} <span class="badge best">{{ ui.icon("i-star") }}<span>Highest score</span></span>{% endif %}</li>
+{% endfor %}
+</ul>
+{% if comparable and best_id %}<p class="small muted">Same corpus and same policy: the highest verdict, then the highest score, is the stronger candidate. It is still evidence for a decision, not a certification.</p>{% endif %}
+</section>
+{% endif %}
+<div class="cmp-wrap" tabindex="0" role="region" aria-label="Comparison table, one column per run (scrolls sideways on small screens)">
+<table class="cmp">
+<caption class="visually-hidden">Comparison of {{ runs|length }} runs: one column per run.</caption>
+<thead>
+<tr>
+<th scope="col" class="rowhead">Run</th>
+{% for r in runs %}{% set best = best_id and r.run_id == best_id %}
+<th scope="col"{% if best %} class="col-best"{% endif %}>
+<a class="run-name" href="{{ root }}/runs/{{ (r.run_id or '')|urlencode }}">{{ r|run_name }}</a>
+<div class="run-sub"><code class="wrap-any">{{ r.run_id or "—" }}</code>{% if r.source == "cli" %}<span class="badge src-cli">CLI</span>{% endif %}{% if r.corpus|synthetic_corpus %}<span class="badge tone-warning">Synthetic data</span>{% endif %}</div>
+{% if best %}<span class="badge best">{{ ui.icon("i-star") }}<span>Highest score</span></span>{% endif %}
+</th>
+{% endfor %}
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row" class="rowhead">Verdict</th>
+{% for r in runs %}<td{% if best_id and r.run_id == best_id %} class="col-best"{% endif %}><div class="cell-stack">{{ ui.verdict_chip(r.verdict) }}{{ ui.score_inline(r.score) }}{{ ui.scorebar(r.score, r.verdict) }}</div></td>{% endfor %}
+</tr>
+<tr>
+<th scope="row" class="rowhead">Coverage</th>
+{% for r in runs %}<td{% if best_id and r.run_id == best_id %} class="col-best"{% endif %}>{{ r.coverage|fmt_pct(0) }}</td>{% endfor %}
+</tr>
+<tr>
+<th scope="row" class="rowhead">Model</th>
+{% for r in runs %}<td{% if best_id and r.run_id == best_id %} class="col-best"{% endif %}><div class="cell-stack"><span class="small">{{ (r|model_line) or "—" }}</span>{% if r.class_name %}<code class="small wrap-any">{{ r.class_name }}</code>{% endif %}</div></td>{% endfor %}
+</tr>
+<tr>
+<th scope="row" class="rowhead">Corpus</th>
+{% for r in runs %}<td class="small wrap-any{% if best_id and r.run_id == best_id %} col-best{% endif %}">{{ r.corpus or "—" }}</td>{% endfor %}
+</tr>
+<tr>
+<th scope="row" class="rowhead">Started</th>
+{% for r in runs %}<td class="small{% if best_id and r.run_id == best_id %} col-best{% endif %}">{{ ui.time(r.created_at) }}</td>{% endfor %}
+</tr>
+<tr class="grp"><th scope="colgroup" colspan="{{ ncol }}" class="rowhead">Per-test results <span class="muted">· axis score and key metric</span></th></tr>
+{% for row in rows %}{% set cells = row.cells or [] %}
+<tr>
+<th scope="row" class="rowhead" title="{{ row.title or row.module_id or '' }}"><span class="code">{{ row.code or "?" }}</span> <span class="rh-title">{{ row.title or row.module_id or "" }}</span></th>
+{% for r in runs %}{% set c = cells[loop.index0] if loop.index0 < cells|length else none %}
+<td{% if best_id and r.run_id == best_id %} class="col-best"{% endif %}>
+{% if c %}{% set s = c.score|axis_pct %}
+<div class="cell-stack">
+{{ ui.status_chip(c.status) }}
+{% if s is not none %}{{ ui.meter(s) }}{% endif %}
+{% if c.key_metric %}<span class="small"><code>{{ c.key_metric }}</code> <strong>{{ c.key_value|fmt_num }}</strong>{% if c.threshold is not none and c.threshold != "" %} <span class="muted">threshold {{ c.threshold|fmt_num }}</span>{% endif %}</span>{% endif %}
+{% if c.gate_outcome %}<span class="muted">{{ c.gate_outcome|outcome_label }}</span>{% endif %}
+</div>
+{% else %}<span class="muted small">not in this run</span>{% endif %}
+</td>
+{% endfor %}
+</tr>
+{% else %}
+<tr><td colspan="{{ ncol }}" class="muted small">No per-test results were recorded for these runs.</td></tr>
+{% endfor %}
+<tr class="grp"><th scope="colgroup" colspan="{{ ncol }}" class="rowhead">Gate-policy and option differences</th></tr>
+{% for d in config_diff %}{% set vals = d["values"] if d["values"] is iterable and d["values"] is not string else [] %}
+<tr>
+<th scope="row" class="rowhead"><code>{{ (d.key or "?")|break_dots }}</code></th>
+{% for r in runs %}<td class="small wrap-any{% if best_id and r.run_id == best_id %} col-best{% endif %}">{% if loop.index0 < vals|length %}{% set v = vals[loop.index0] %}{% if v is none %}<span class="muted">not set</span>{% else %}{{ v|fmt_value }}{% endif %}{% else %}<span class="muted">—</span>{% endif %}</td>{% endfor %}
+</tr>
+{% else %}
+<tr><td colspan="{{ ncol }}" class="small">{{ ui.icon("i-check") }} All selected runs used the same gate policy and options.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="small muted">Axis scores are 0–100; 75 means the metric sits exactly on its threshold. A skipped test has no score and lowers that run's coverage.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,369 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% set run = run or {} %}
+{% set files = files or {} %}
+{% set rv = report|report_view %}
+{% set pv = progress|progress_view %}
+{% set jv = job|job_view %}
+{% set status = (run.status or jv.status or ("finished" if rv.present else ""))|status_key %}
+{% set active = status in ("queued", "running") %}
+{% set rid = run.run_id or rv.run.id or "" %}
+{% set base_url = root ~ "/runs/" ~ (rid|urlencode) %}
+{% set name = (run|run_name) if (run.title or run.display_name or run.class_name or run.adapter) else (rv.title or rv.model.class_name or (run|run_name)) %}
+{% set vd = rv.verdict %}
+{% set has_verdict = rv.present and vd.key %}
+{% set is_cli = run.source == "cli" or (not jv.present and rv.present) %}
+{% set exit_code = run.exit_code if run.exit_code is number else (jv.exit_code if jv.exit_code is number else rv.gate.exit_code) %}
+{% block title %}{% if has_verdict %}{{ vd.word }} {{ vd.score|fmt_score }} · {% elif status %}{{ status|status_label }} · {% endif %}{{ name }}{% endblock %}
+{% block head %}{% if active %}<noscript><meta http-equiv="refresh" content="5"></noscript>{% endif %}{% endblock %}
+{% block content %}
+{% set started_at = jv.started_at or pv.started_at or (none if status == "queued" else run.created_at) %}
+{% set ahead = queue_ahead or [] %}
+<div data-run-page data-run-id="{{ rid }}" data-status="{{ status }}" data-started="{{ started_at|fmt_iso if started_at else "" }}" data-queued-since="{{ (jv.created_at or run.created_at)|fmt_iso }}">
+
+<div class="page-head">
+<div>
+<p class="eyebrow">Run <code>{{ rid or "—" }}</code> · {% if is_cli %}from the command line{% else %}started here{% endif %}{% if status and status != "unknown" %} · <span data-live-status-text>{{ status|status_label|lower }}</span>{% endif %}</p>
+<h1 class="wrap-any">{{ name }}</h1>
+<p class="meta">
+{% set ml = run|model_line %}{% if not ml and rv.present %}{% set ml = rv.model.model_kind ~ (" · " ~ rv.model.feature_version if rv.model.feature_version else "") ~ (" · threshold " ~ (rv.model.operating_threshold|fmt_num(6)) if rv.model.operating_threshold is not none else "") %}{% endif %}
+{% if ml %}<span class="meta-item"><span class="muted">Model</span> {{ ml }}</span>{% endif %}
+{% if run.class_name or rv.model.class_name %}<span class="meta-item"><span class="muted">Class</span> <code>{{ run.class_name or rv.model.class_name }}</code></span>{% endif %}
+{% if run.corpus or rv.corpus.name %}<span class="meta-item"><span class="muted">Corpus</span> {{ run.corpus or rv.corpus.name }}</span>{% endif %}
+{% if status == "queued" %}{% if jv.created_at or run.created_at %}<span class="meta-item"><span class="muted">Submitted</span> {{ ui.time(jv.created_at or run.created_at) }}</span>{% endif %}
+{% elif started_at or rv.run.started_at %}<span class="meta-item"><span class="muted">Started</span> {{ ui.time(started_at or rv.run.started_at) }}</span>{% endif %}
+{% set dur = run.duration_s if run.duration_s is number else rv.run.duration_s %}
+{% if dur is number and not active %}<span class="meta-item"><span class="muted">Took</span> {{ dur|fmt_duration }}</span>{% endif %}
+</p>
+</div>
+<div class="run-actions no-print">
+{% if files.report_html %}<a class="btn" href="{{ base_url }}/report.html" target="_blank" rel="noopener">{{ ui.icon("i-external") }}<span>Open full report</span></a>{% endif %}
+{% if not active and jv.present and rid %}<a class="btn" href="{{ root }}/runs/new?from={{ rid|urlencode }}" data-rerun>{{ ui.icon("i-refresh") }}<span>Re-run with these settings</span></a>{% endif %}
+{% if not active %}<a class="btn" href="{{ root }}/runs/new">{{ ui.icon("i-plus") }}<span>New run</span></a>{% endif %}
+</div>
+</div>
+
+{% if problem %}<p class="callout tone-warning" data-run-problem>{{ ui.icon("i-warn") }}<span><strong>Some of this run's files could not be used:</strong> {{ problem }}. The page shows what could be read; the raw files are in the run folder.</span></p>{% endif %}
+{% if stale_report %}<p class="callout tone-warning" data-stale-report>{{ ui.icon("i-warn") }}<span><strong>The report.json in this folder is from an earlier run.</strong> A later <code>malvalid run</code> wrote to the same <code>--out</code> folder{% if status in ("queued", "running") %} and is still running{% else %} and did not write its own report{% endif %}, so the old verdict is not shown as this run's result.</span></p>{% endif %}
+
+{# ================================================================ queued / running #}
+{% if active %}
+<section class="verdict status-hero {{ status|status_class }}" aria-labelledby="status-h">
+<div class="verdict-main">
+<div class="verdict-id">
+<span class="verdict-icon" data-live-icon>{{ ui.icon(status|status_icon, "ic-xl") }}</span>
+<div>
+<p class="eyebrow">Status</p>
+<h2 class="verdict-word" id="status-h" data-live-status>{{ status|status_label }}</h2>
+</div>
+</div>
+<div class="elapsed js-only"><p class="eyebrow" data-live-elapsed-label>{% if status == "queued" %}Queued for{% else %}Elapsed{% endif %}</p><p class="score-line"><span class="n" data-live-elapsed>—</span></p></div>
+</div>
+<p class="stage-now"><strong data-live-stage>{% if status == "queued" %}{{ "queued"|stage_label }}{% else %}{{ pv.stage_label or "Starting the run" }}{% endif %}</strong>{% if pv.module %}<span data-live-module>: {{ pv.module.code }} {{ pv.module.title }}</span>{% else %}<span data-live-module></span>{% endif %}</p>
+<p class="stage-msg" data-live-message>{% if pv.message %}{{ pv.message }}{% elif status == "queued" %}{% if ahead %}Waiting for {{ ahead|length }} run{{ "s" if ahead|length != 1 }} ahead of it ({% for a in ahead[:3] %}<a href="{{ root }}/runs/{{ a.run_id|urlencode }}">{{ a.display_name }}</a>{% if a.status == "running" %} running{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% if ahead|length > 3 %}, …{% endif %}). It starts automatically when a worker is free.{% else %}Runs execute one at a time by default; this one starts when the worker is free.{% endif %}{% endif %}</p>
+{{ ui.stepper(pv.steps) }}
+<div class="progress-line">
+<span class="bar tone-info" aria-hidden="true"><span class="fill w-{{ pv.done_step }}" data-live-bar></span></span>
+<span data-live-count>{% if pv.n_total %}{{ pv.n_done }} of {{ pv.n_total }} tests finished{% else %}Test list not known yet{% endif %}</span>
+</div>
+<p class="visually-hidden" aria-live="polite" data-live-announce></p>
+<details class="more js-only live-console">
+<summary>Latest output</summary>
+<div class="more-body"><pre class="code tail" data-live-console>No output yet.</pre><p class="small muted">The last lines the run printed, updated while it runs{% if files.console_log %}; the whole log is <a href="{{ base_url }}/console.log">console.log</a>{% endif %}.</p></div>
+</details>
+<div class="hero-actions">
+{% if jv.present %}
+<form method="post" action="{{ root }}/api/runs/{{ rid|urlencode }}/cancel" data-api-form data-confirm="Cancel this run? The model process is stopped and nothing is scored." data-next="{{ base_url }}">
+{{ ui.csrf_field(csrf_token) }}
+<input type="hidden" name="next" value="{{ base_url }}">
+<button type="submit" class="btn danger">{{ ui.icon("i-stop") }}<span>Cancel run</span></button>
+</form>
+{% else %}
+<p class="small muted" data-cli-run-note>Started from the command line: stop it in its terminal (Ctrl+C).</p>
+{% endif %}
+<a class="btn ghost no-js" href="{{ base_url }}">{{ ui.icon("i-refresh") }}<span>Refresh</span></a>
+<span class="small muted js-only" data-live-poll>Updating every 2 seconds.</span>
+</div>
+</section>
+
+<section class="card" aria-labelledby="mods-h">
+<div class="section-title"><h2 id="mods-h">Tests</h2><p class="small muted">In scorecard order. M0 scans the model files before anything is loaded.</p></div>
+<ul class="mod-list" data-live-modules>
+{% for m in pv.modules %}{{ ui.module_row(m) }}
+{% else %}<li class="status-pending"><span>{{ ui.status_chip("pending") }}</span><span class="mod-code"></span><span class="mod-title muted">The test list appears once the adapter has been inspected.</span><span class="mod-dur"></span></li>
+{% endfor %}
+</ul>
+</section>
+
+{# ================================================================ finished (report present) #}
+{% elif rv.present %}
+{% if status == "failed" or exit_code == 2 %}
+{% set sig = exit_code|exit_signal %}
+{% set meaning = rv.gate.exit_meaning or "a module errored or the model could not be loaded, so the gate result is not trustworthy." %}
+<div class="callout tone-critical" data-failed-with-report>{{ ui.icon("i-error") }}<div>
+{% if sig %}<p><strong>MalValid crashed ({{ sig }}) after writing this report.</strong> The process did not exit cleanly, so the run is marked failed. The report below{% if rv.gate.exit_code is number %} (its own exit code: {{ rv.gate.exit_code }}){% endif %} was complete when the crash happened; re-run to confirm the result.</p>
+{% else %}<p><strong>The run exited with code {{ exit_code if exit_code is number else (rv.gate.exit_code if rv.gate.exit_code is number else "2") }}:</strong> {{ meaning }}</p>
+{% if jv.error and not (rv.gate.exit_meaning and rv.gate.exit_meaning in jv.error) %}<p class="small wrap-any">{{ jv.error }}</p>{% endif %}{% endif %}
+{% if files.console_log %}<p class="small">Details: <a href="{{ base_url }}/console.log">console.log</a>{% if files.run_log %} and <a href="{{ base_url }}/run.log">run.log</a>{% endif %}.</p>{% endif %}</div></div>
+{% endif %}
+<section class="verdict tone-{{ vd.tone }}" aria-labelledby="verdict-h">
+<div class="verdict-main">
+<div class="verdict-id">
+<span class="verdict-icon">{{ ui.icon(vd.icon, "ic-xl") }}</span>
+<div>
+<p class="eyebrow">Verdict</p>
+<h2 class="verdict-word" id="verdict-h">{{ vd.word }}</h2>
+{% if vd.label %}<p class="verdict-label">{{ vd.label }}</p>{% endif %}
+</div>
+</div>
+<div class="score">
+<p class="eyebrow">Production-readiness score</p>
+<p class="score-line"><span class="score-num">{{ vd.score|fmt_score }}</span><span class="score-den">/100</span></p>
+{% if rv.corpus.synthetic %}<p><span class="badge tone-warning" data-synthetic-badge>{{ ui.icon("i-warn") }}<span>Synthetic data</span></span></p>{% elif rv.corpus.error %}<p><span class="badge tone-warning">{{ ui.icon("i-warn") }}<span>No usable corpus</span></span></p>{% endif %}
+{% if vd.capped and vd.raw is not none %}<p class="score-cap">capped at {{ vd.cap|fmt_score(0) }} (uncapped {{ vd.raw|fmt_score }})</p>{% endif %}
+</div>
+</div>
+<p class="verdict-meaning">{{ vd.meaning }}</p>
+{% if vd.isolation_warning %}<p class="callout tone-warning small" data-isolation="{{ vd.isolation }}">{{ ui.icon("i-warn") }}<span><strong>Isolation: {{ vd.isolation }}.</strong> {{ vd.isolation_warning }}</span></p>{% endif %}
+{{ ui.scale(vd) }}
+<div class="verdict-facts">
+<div class="fact">
+<p class="eyebrow">Coverage</p>
+{% if vd.coverage is not none %}
+<p class="fact-val">{{ vd.coverage|fmt_pct(0) }} <span class="muted small">of the weighted battery evaluated</span></p>
+<span class="bar tone-info" aria-hidden="true"><span class="fill w-{{ vd.coverage|frac_step }}"></span></span>
+{% if vd.min_coverage is not none %}<p class="muted small">Ready needs at least {{ vd.min_coverage|fmt_pct(0) }}. Skipped tests lower coverage; they never count as passes.</p>{% endif %}
+{% else %}<p class="fact-val muted">—</p>{% endif %}
+</div>
+<div class="fact">
+<p class="eyebrow">CI exit code</p>
+<p class="fact-val">{% if exit_code is number %}{{ exit_code }}{% else %}—{% endif %}{% if rv.gate.fail_on %} <span class="muted small">(fail on {{ rv.gate.fail_on }})</span>{% endif %}</p>
+{% if rv.gate.exit_meaning %}<p class="muted small">{{ rv.gate.exit_meaning }}</p>{% endif %}
+</div>
+{% if rv.gate.hard %}
+<div class="fact">
+<p class="eyebrow">Hard gates</p>
+<p class="badges">{% for h in rv.gate.hard %}<span class="chip tone-{{ h.tone }}" title="{{ h.title }}">{{ ui.icon(h.icon) }}<span><span class="code">{{ h.code }}</span> {{ h.label }}</span></span>{% endfor %}</p>
+</div>
+{% endif %}
+</div>
+{% if rv.gate.aborted %}<p class="callout tone-critical">{{ ui.icon("i-block") }}<span><strong>M0 aborted the run before the model was loaded:</strong> {{ rv.gate.aborted }}</span></p>{% endif %}
+{% if rv.gate.load_error %}<p class="callout tone-critical">{{ ui.icon("i-error") }}<span><strong>The model could not be loaded:</strong> {{ rv.gate.load_error }}</span></p>{% endif %}
+{% if vd.blockers %}
+<div class="reasons blockers">
+<h3>{{ ui.icon("i-block") }} Blocking issues</h3>
+<ul>{% for b in vd.blockers %}<li>{{ b }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+{% if vd.reasons %}
+<div class="reasons">
+<h3>{{ ui.icon("i-info") }} {% if vd.blockers %}Other reasons{% else %}Why this verdict{% endif %}</h3>
+<ul>{% for r in vd.reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+<p class="muted small">A verdict is evidence for a promotion decision, not a certification. Screening tests can find problems but cannot prove their absence.</p>
+</section>
+
+{% if rv.corpus.synthetic %}<p class="callout tone-warning">{{ ui.icon("i-warn") }}<span><strong>Synthetic corpus{% if rv.corpus.name %} ({{ rv.corpus.name }}){% endif %}.</strong> These numbers exercise the pipeline; they are not evidence about real-world performance.</span></p>{% endif %}
+{% if rv.corpus.error %}<p class="callout tone-warning">{{ ui.icon("i-warn") }}<span><strong>Canonical corpus not usable:</strong> {{ rv.corpus.error }} Tests that need the feature space were skipped.</span></p>{% endif %}
+{% if rv.warnings %}
+<div class="callout tone-warning">{{ ui.icon("i-warn") }}<div><p><strong>Run warnings ({{ rv.warnings|length }})</strong></p><ul>{% for w in rv.warnings %}<li class="wrap-any">{{ w }}</li>{% endfor %}</ul></div></div>
+{% endif %}
+
+<section class="card" id="scorecard" aria-labelledby="scorecard-h">
+<div class="section-title">
+<h2 id="scorecard-h">Per-test scorecard</h2>
+<p class="small muted">An axis score of 75 means the metric sits exactly on its threshold; below 75 the gate fails.</p>
+</div>
+{% if rv.modules %}
+<div class="table-wrap">
+<table class="scorecard stack-sm">
+<thead><tr><th scope="col">Test</th><th scope="col">Status</th><th scope="col">Gate</th><th scope="col">Axis score</th><th scope="col">Finding</th></tr></thead>
+<tbody>
+{% for m in rv.modules %}
+<tr class="row-{{ m.status }}">
+<td data-label="Test"><span class="sc-test"><span class="code">{{ m.code }}</span><span>{{ m.title }}</span></span>{% if m.screening %}<span class="sc-sub">{{ ui.screening_badge() }}</span>{% endif %}</td>
+<td data-label="Status">{{ ui.chip("tone-" ~ m.tone, m.icon, m.status_label) }}</td>
+<td data-label="Gate">{{ ui.gate_badge(m.gate) }}{% if m.outcome_label %}<span class="sc-sub small muted">{{ m.outcome_label }}</span>{% endif %}</td>
+<td data-label="Axis score">
+{% if m.unscored %}<span class="muted small">precondition, not scored</span>
+{% else %}{{ ui.meter(m.score) }}{% if m.weight is not none %}<span class="sc-sub small muted">weight {{ m.weight|fmt_num }}{% if not m.counted %} · not counted{% endif %}</span>{% endif %}{% endif %}
+</td>
+<td data-label="Finding">
+{% if m.status == "skipped" and m.corpus_skip %}<span class="muted">Skipped: no usable corpus (see above).</span>
+{% elif m.status == "skipped" %}<span class="muted">Not run: {{ m.skip_reason or m.finding or "no reason recorded" }}</span>
+{% elif m.status == "error" %}<span class="err-text wrap-any">{{ m.error_head or m.finding or "The module crashed." }}</span>
+{% else %}
+{% if m.primary %}<span class="keymetric">{{ ui.icon("i-pass" if m.primary.passed is sameas true else ("i-fail" if m.primary.passed is sameas false else "i-unknown")) }}<code>{{ m.primary.metric }}</code> <strong>{{ m.primary.value }}</strong> <span class="muted">{{ m.primary.op }} {{ m.primary.threshold }}</span></span>{% if m.n_checks > 1 %}<details class="checks-more"><summary class="small">All {{ m.n_checks }} checks</summary><ul class="check-list small">{% for c in m.checks %}<li>{{ ui.icon("i-pass" if c.passed is sameas true else ("i-fail" if c.passed is sameas false else "i-unknown")) }}<span class="visually-hidden">{% if c.passed is sameas true %}passed: {% elif c.passed is sameas false %}failed: {% else %}not evaluated: {% endif %}</span><code>{{ c.metric }}</code> <strong>{{ c.value }}</strong> <span class="muted">{{ c.op }} {{ c.threshold }}</span></li>{% endfor %}</ul></details>{% endif %}{% endif %}
+{% if m.finding %}<span class="sc-sub small muted wrap-any">{{ m.finding }}</span>{% elif not m.primary %}<span class="muted">No gated metric.</span>{% endif %}
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% if rv.gate.disabled %}<p class="small muted" data-disabled-modules>Not run (off in this policy): {% for d in rv.gate.disabled %}{{ d|module_label }}{% if not loop.last %}, {% endif %}{% endfor %}. Coverage counts only the tests the policy enables.</p>{% endif %}
+<p class="small muted">The headline score is the weighted mean of the axis scores of the tests that ran. Weights and verdict bands are policy in <code>gate.yaml</code> (<code>verdict:</code>).{% if files.report_html %} Charts and per-test evidence are in the full report below.{% endif %}</p>
+{% else %}
+<p class="muted">The report records no test results.</p>
+{% endif %}
+</section>
+
+{% if files.report_html %}
+<section class="card frame-card" aria-labelledby="report-h">
+<div class="section-title">
+<h2 id="report-h">Full report</h2>
+<div class="btn-row">
+<a class="btn small" href="{{ base_url }}/report.html" target="_blank" rel="noopener">{{ ui.icon("i-external") }}<span>Open in a new tab</span></a>
+{% if files.report_json %}<a class="btn small" href="{{ base_url }}/report.json" download>{{ ui.icon("i-download") }}<span>report.json</span></a>{% endif %}
+</div>
+</div>
+<p class="small muted">The self-contained <code>report.html</code>: charts, per-test evidence and the reproducibility appendix. It works offline, so you can attach it to a paper or a CI job. Drag the bottom edge to resize.</p>
+<div class="frame-box"><iframe src="{{ base_url }}/report.html" sandbox="allow-scripts" title="Full production-readiness report for {{ name }}" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
+</section>
+{% endif %}
+
+{# ================================================================ no report: failed / cancelled / interrupted / unknown #}
+{% else %}
+{% if status == "failed" %}
+<section class="verdict status-hero tone-critical" aria-labelledby="status-h">
+<div class="verdict-main"><div class="verdict-id"><span class="verdict-icon">{{ ui.icon("i-error", "ic-xl") }}</span><div><p class="eyebrow">Status</p><h2 class="verdict-word" id="status-h">Run failed</h2><p class="verdict-label">No verdict: the run stopped before it could write a report{% if exit_code is number %} (exit code {{ exit_code }}){% endif %}.</p></div></div></div>
+{% set fail_msg = jv.error or (pv.message if pv.stage == "failed" or is_cli else "") or problem %}
+{% if fail_msg %}{% set ep = fail_msg|error_parts %}
+<div class="error-box" data-error>
+<p class="error-text wrap-any">{{ ep.head }}</p>
+{% if ep["items"] %}<ul class="error-items">{% for it in ep["items"] %}<li class="wrap-any">{{ it }}</li>{% endfor %}</ul>{% endif %}
+{% if ep.traceback %}<details class="more"><summary>Traceback</summary><div class="more-body"><pre class="code error-text">{{ ep.traceback }}</pre></div></details>{% endif %}
+</div>
+{% endif %}
+<div class="reasons">
+<h3>{{ ui.icon("i-info") }} What to try</h3>
+<ul>
+{% if files.console_log %}<li>Read <a href="{{ base_url }}/console.log">console.log</a>: everything the run printed, including your adapter's output and the traceback.</li>{% endif %}
+{% if files.run_log %}<li>Read <a href="{{ base_url }}/run.log">run.log</a>, MalValid's step-by-step log of the run.</li>{% endif %}
+{% if jv.model_file %}<li>Check the model file without a full run: <a href="{{ root }}/runs/new{% if rid %}?from={{ rid|urlencode }}{% endif %}">Inspect model</a> on the New run page, or <code>malvalid inspect-model your_model.txt</code>. It shows the kind and feature version MalValid detects; choose them by hand when detection fails.</li>
+{% else %}<li>Check the adapter without a full run: <a href="{% if jv.present and rid %}{{ root }}/runs/new?from={{ rid|urlencode }}{% else %}{{ root }}/runs/new{% endif %}">Validate adapter</a> on the New run page, or <code>malvalid validate-adapter --adapter your_adapter.py</code>.</li>{% endif %}
+{% if jv.present and rid %}<li>Fixed it? <a href="{{ root }}/runs/new?from={{ rid|urlencode }}">Re-run with these settings</a>.</li>{% endif %}
+{% if jv.model_file %}<li>Common causes: the model kind or feature version cannot be detected from the file (it expects a number of features other than 2381 or 2568, or it is a pickle), a pickle without “Allow pickle”, a corpus that is not installed, or an invalid <code>gate.yaml</code>.</li>
+{% else %}<li>Common causes: the adapter cannot be imported (a syntax error or a missing package), a required declaration such as <code>feature_version</code> or <code>operating_threshold</code> is missing, an unknown corpus or feature version, or an invalid <code>gate.yaml</code>.</li>{% endif %}
+</ul>
+</div>
+</section>
+{% elif status == "cancelled" %}
+<section class="verdict status-hero tone-neutral" aria-labelledby="status-h">
+<div class="verdict-main"><div class="verdict-id"><span class="verdict-icon">{{ ui.icon("i-stop", "ic-xl") }}</span><div><p class="eyebrow">Status</p><h2 class="verdict-word" id="status-h">Cancelled</h2><p class="verdict-label">This run was stopped before it finished, so nothing was scored.</p></div></div></div>
+<div class="hero-actions"><a class="btn primary" href="{{ root }}/runs/new">{{ ui.icon("i-plus") }}<span>Start a new run</span></a></div>
+</section>
+{% elif status == "interrupted" %}
+<section class="verdict status-hero tone-warning" aria-labelledby="status-h">
+<div class="verdict-main"><div class="verdict-id"><span class="verdict-icon">{{ ui.icon("i-warn", "ic-xl") }}</span><div><p class="eyebrow">Status</p><h2 class="verdict-word" id="status-h">Interrupted</h2><p class="verdict-label">{% if is_cli or not jv.present %}The run's process ended before it finished (it was stopped or killed in its terminal, or the machine went down), so there is no verdict.{% else %}The MalValid server stopped while this run was in progress, so it never finished.{% endif %}</p></div></div></div>
+<p class="verdict-meaning">Start it again from New run. Whatever the run wrote before it stopped is listed under Files.</p>
+<div class="hero-actions"><a class="btn primary" href="{{ root }}/runs/new">{{ ui.icon("i-plus") }}<span>Start a new run</span></a></div>
+</section>
+{% else %}
+<section class="verdict status-hero tone-neutral" aria-labelledby="status-h">
+<div class="verdict-main"><div class="verdict-id"><span class="verdict-icon">{{ ui.icon("i-unknown", "ic-xl") }}</span><div><p class="eyebrow">Status</p><h2 class="verdict-word" id="status-h">No report</h2><p class="verdict-label">This run has no readable <code>report.json</code>{% if status and status != "unknown" %} (status: {{ status|status_label|lower }}){% endif %}.</p></div></div></div>
+{% if files.console_log or files.run_log %}<p class="verdict-meaning">Its logs may say why; see Files below.</p>{% endif %}
+</section>
+{% endif %}
+{% endif %}
+
+{# ================================================================ details #}
+<div class="grid-2">
+<div>
+<section class="card" aria-labelledby="sub-h">
+<h2 id="sub-h">Submission</h2>
+{% if jv.present %}
+<dl class="facts">
+{% if jv.mode %}<dt>Mode</dt><dd>{% if jv.mode == "model" %}Uploaded model file{% elif jv.mode == "upload" %}Uploaded files (own adapter){% elif jv.mode == "path" %}{% if jv.model_file %}Model file on this machine{% else %}Files on this machine{% endif %}{% else %}{{ jv.mode }}{% endif %}</dd>{% endif %}
+{% if jv.adapter %}<dt>{% if jv.model_file %}Model file{% else %}Adapter{% endif %}</dt><dd><code class="wrap-any">{{ jv.adapter }}</code></dd>{% endif %}
+{% for o in jv.options %}<dt>{{ o.label }}</dt><dd class="wrap-any">{{ o.value }}</dd>{% endfor %}
+{% if jv.submission_id %}<dt>Submission</dt><dd><code class="wrap-any">{{ jv.submission_id }}</code></dd>{% endif %}
+{% if jv.created_at %}<dt>Submitted</dt><dd>{{ ui.time(jv.created_at) }}</dd>{% endif %}
+{% if jv.started_at %}<dt>Started</dt><dd>{{ ui.time(jv.started_at) }}</dd>{% endif %}
+{% if jv.finished_at %}<dt>Ended</dt><dd>{{ ui.time(jv.finished_at) }}</dd>{% endif %}
+{% if exit_code is number %}<dt>Exit code</dt><dd>{{ exit_code }}</dd>{% endif %}
+</dl>
+{% if jv.no_sandbox %}<p class="callout tone-critical small">{{ ui.icon("i-warn") }}<span>This run loaded the model <strong>without the sandbox</strong>.</span></p>{% endif %}
+{% if jv.command %}
+<p class="small muted">The same run from a terminal:</p>
+{{ ui.cmd("job-cmd", jv.command) }}
+{% endif %}
+{% elif rv.run.command %}
+<p class="small">Started from the command line:</p>
+{{ ui.cmd("report-cmd", rv.run.command) }}
+{% else %}
+<p class="muted small">No submission details were recorded for this run.</p>
+{% endif %}
+</section>
+
+{% if rv.present %}
+<section class="card" aria-labelledby="model-h">
+<h2 id="model-h">Model</h2>
+<dl class="facts">
+{% if rv.model.class_name %}<dt>Class</dt><dd><code>{{ rv.model.class_name }}</code></dd>{% endif %}
+{% if rv.model.model_kind %}<dt>Kind</dt><dd>{{ rv.model.model_kind }}</dd>{% endif %}
+{% if rv.model.feature_version %}<dt>Feature version</dt><dd>{{ rv.model.feature_version }}</dd>{% endif %}
+{% if rv.model.operating_threshold is not none %}<dt>Operating threshold</dt><dd>{{ rv.model.operating_threshold|fmt_num(6) }}{% set cal = rv.model.calibration %}{% if rv.model.threshold_source == "calibrated" %} <span class="muted" data-threshold-calibrated>auto-calibrated{% if cal %} (target FPR {{ cal.target_fpr|fmt_pct(2) }}{% if cal.n_benign is not none %}, on {{ cal.n_benign|fmt_num }} held-out benign rows{% endif %}{% if cal.achieved_fpr is not none %}; achieved {{ cal.achieved_fpr|fmt_pct(3) }}{% endif %}){% endif %}</span>{% if cal and cal.rule %}<span class="help">Computed by MalValid, not declared by you: rows held out by the rule “{{ cal.rule }}”{% if cal.corpus %} in {{ cal.corpus }}{% endif %}{% if cal.period %} (dated {{ cal.period[0] }} to {{ cal.period[1] }}){% endif %} are used only for this and excluded from every test.{% if cal.policy == "earliest" %} Held threshold: it is fit on the earliest benign rows and tested on later ones, as when deployed.{% elif cal.policy == "uniform" %} Uniform policy: the rows span the whole test period, so FPR at this threshold is close to the target by construction.{% endif %}</span>{% endif %}{% endif %}</dd>{% endif %}
+<dt>Training cutoff</dt><dd>{% if rv.model.training_cutoff %}{{ rv.model.training_cutoff }}{% else %}<span class="muted">not declared, so M2 temporal drift is skipped</span>{% endif %}</dd>
+<dt>Training manifest</dt><dd>{% if rv.manifest.declared or rv.model.training_hashes_path %}{% if rv.manifest.n_hashes is not none %}{{ rv.manifest.n_hashes|fmt_num }} hashes{% if rv.manifest.n_in_corpus is not none %}, {{ rv.manifest.n_in_corpus|fmt_num }} found in the corpus{% endif %}{% else %}<code class="wrap-any">{{ rv.model.training_hashes_path }}</code>{% endif %}{% else %}<span class="muted">not declared, so M4 membership inference is skipped</span>{% endif %}</dd>
+{% if rv.model.adapter_path %}<dt>Adapter</dt><dd><code class="wrap-any">{{ rv.model.adapter_path }}</code></dd>{% endif %}
+{% if rv.model.adapter_sha256 %}<dt>Adapter sha256</dt><dd><code class="wrap-any">{{ rv.model.adapter_sha256 }}</code></dd>{% endif %}
+{% for p in rv.model.model_paths %}<dt>{% if loop.first %}Model file{% if rv.model.model_paths|length > 1 %}s{% endif %}{% endif %}</dt><dd><code class="wrap-any">{{ p }}</code></dd>{% endfor %}
+</dl>
+</section>
+{% endif %}
+</div>
+
+<div>
+{% if rv.present %}
+<section class="card" aria-labelledby="env-h">
+<h2 id="env-h">Corpus and sandbox</h2>
+<dl class="facts">
+<dt>Corpus</dt><dd>{% if rv.corpus.name %}{{ rv.corpus.name }}{% if rv.corpus.version %} <span class="muted">v{{ rv.corpus.version }}</span>{% endif %}{% else %}<span class="muted">—</span>{% endif %}{% if rv.corpus.synthetic %} <span class="badge">synthetic</span>{% endif %}</dd>
+{% if rv.corpus.n is not none %}<dt>Samples</dt><dd>{{ rv.corpus.n|fmt_num }}{% if rv.corpus.excluded_training_members %} <span class="muted">({{ rv.corpus.excluded_training_members|fmt_num }} training members excluded)</span>{% endif %}</dd>{% endif %}
+{% if rv.corpus.content_hash %}<dt>Content hash</dt><dd><code class="wrap-any">{{ rv.corpus.content_hash }}</code></dd>{% endif %}
+{% if rv.sandbox.present %}
+<dt>Sandbox</dt><dd>{% if not rv.sandbox.enabled %}<span class="err-text">disabled</span>{% else %}{{ rv.sandbox.backend or "enabled" }}{% if rv.sandbox.network_isolated %} · network isolated{% else %} · <span class="err-text">network not isolated</span>{% endif %}{% endif %}</dd>
+{% if rv.sandbox.isolation %}<dt>Isolation level</dt><dd>{% if rv.sandbox.isolation == "os_sandbox" %}OS sandbox{% else %}<span class="err-text">{{ rv.sandbox.isolation }}</span>{% if rv.sandbox.isolation == "process_only" %} · reduced isolation: this platform has no OS sandbox{% endif %}{% endif %}</dd>{% endif %}
+{% if rv.sandbox.detail %}<dt>Isolation</dt><dd class="small">{{ rv.sandbox.detail }}</dd>{% endif %}
+{% endif %}
+{% if rv.run.seed is not none %}<dt>Seed</dt><dd>{{ rv.run.seed }}</dd>{% endif %}
+{% if rv.tool_version %}<dt>MalValid</dt><dd>{{ rv.tool_version }}</dd>{% endif %}
+</dl>
+</section>
+{% endif %}
+
+<section class="card" aria-labelledby="files-h">
+<h2 id="files-h">Files</h2>
+{% if files.report_html or files.report_json or files.run_log or files.console_log %}
+<ul class="files">
+{% if files.report_html %}<li><a class="btn small" href="{{ base_url }}/report.html" target="_blank" rel="noopener">{{ ui.icon("i-file") }}<span>report.html</span></a></li>{% endif %}
+{% if files.report_json %}<li><a class="btn small" href="{{ base_url }}/report.json" download>{{ ui.icon("i-download") }}<span>report.json</span></a></li>{% endif %}
+{% if files.run_log %}<li><a class="btn small" href="{{ base_url }}/run.log">{{ ui.icon("i-file") }}<span>run.log</span></a></li>{% endif %}
+{% if files.console_log %}<li><a class="btn small" href="{{ base_url }}/console.log">{{ ui.icon("i-terminal") }}<span>console.log</span></a></li>{% endif %}
+</ul>
+<p class="small muted">Everything lives in <code class="wrap-any">{{ (runs_dir or "malvalid-runs") ~ "/" ~ rid }}</code>. Sensitive intermediate data stays in its <code>private/</code> folder and is never served.</p>
+{% else %}
+<p class="muted small">{% if active %}Files appear here as the run writes them.{% else %}This run wrote no report or log files.{% endif %}</p>
+{% endif %}
+</section>
+
+{% if not active and rid %}
+<section class="card danger-zone" aria-labelledby="del-h">
+<h2 id="del-h">Delete this run</h2>
+<p class="small">Removes the run folder (report, logs{% if jv.mode in ("upload", "model") %} and the uploaded files{% endif %}) from disk. This cannot be undone.</p>
+<form method="post" action="{{ root }}/api/runs/{{ rid|urlencode }}/delete" data-api-form data-confirm="Delete this run? Its report, logs and uploaded files are removed from disk. This cannot be undone." data-next="{{ root }}/">
+{{ ui.csrf_field(csrf_token) }}
+<input type="hidden" name="next" value="/">
+<button type="submit" class="btn danger">{{ ui.icon("i-trash") }}<span>Delete run</span></button>
+</form>
+</section>
+{% endif %}
+</div>
+</div>
+
+<p class="print-only small">Printed from MalValid {{ app_version or "" }}. Run <code>{{ rid }}</code>; the full evidence is in <code>report.html</code> in the run folder.</p>
+</div>
+{% endblock %}

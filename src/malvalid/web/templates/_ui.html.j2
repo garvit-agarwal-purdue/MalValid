@@ -1,0 +1,167 @@
+{#- Reusable pieces of the MalValid web UI. Every status is color + icon + text.
+    Imported without context: pass anything a macro needs as an argument. -#}
+
+{% macro sprite() -%}
+<svg class="sprite" aria-hidden="true" focusable="false">
+<symbol id="i-pass" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 8.3l2.1 2.1L11.2 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-warn" viewBox="0 0 16 16"><path d="M8 1.9l6.6 11.6H1.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.2v3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11.6" r="0.95" fill="currentColor"/></symbol>
+<symbol id="i-fail" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="i-skip" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.2 1.8"/><path d="M5.2 8h5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="i-error" viewBox="0 0 16 16"><path d="M5.3 1.6h5.4l3.7 3.7v5.4l-3.7 3.7H5.3l-3.7-3.7V5.3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 4.8v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.95" fill="currentColor"/></symbol>
+<symbol id="i-block" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.4 12.6l9.2-9.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+<symbol id="i-unknown" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.1 6.3a1.95 1.95 0 1 1 2.7 1.8c-.5.2-.8.6-.8 1.1v.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.5" r="0.9" fill="currentColor"/></symbol>
+<symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="4.9" r="0.95" fill="currentColor"/></symbol>
+<symbol id="i-screen" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.3 10.3L14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="i-theme" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></symbol>
+<symbol id="i-pending" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.4" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+<symbol id="i-running" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-opacity="0.28" stroke-width="2"/><path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-clock" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.6"/><path d="M8 4.6V8l2.4 1.6"/></g></symbol>
+<symbol id="i-check" viewBox="0 0 16 16"><path d="M3.2 8.4l3 3 6.6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-stop" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5.6" y="5.6" width="4.8" height="4.8" rx="0.8" fill="currentColor"/></symbol>
+<symbol id="i-shield" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5l5.5 2v4.2c0 3.2-2.3 5.8-5.5 6.8-3.2-1-5.5-3.6-5.5-6.8V3.5z"/><path d="M5.6 8.1l1.7 1.7 3.2-3.4"/></g></symbol>
+<symbol id="i-grid" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/></g></symbol>
+<symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="i-columns" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="1.8" y="2.5" width="12.4" height="11" rx="1.5"/><path d="M6 2.5v11M10 2.5v11"/></g></symbol>
+<symbol id="i-db" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="3.8" rx="5.2" ry="2"/><path d="M2.8 3.8v8.4c0 1.1 2.3 2 5.2 2s5.2-.9 5.2-2V3.8M2.8 8c0 1.1 2.3 2 5.2 2s5.2-.9 5.2-2"/></g></symbol>
+<symbol id="i-list" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.8 4h6.8M6.8 8h6.8M6.8 12h6.8"/><path d="M2.3 4l.9.9 1.5-1.7M2.3 8l.9.9 1.5-1.7M2.3 12l.9.9 1.5-1.7"/></g></symbol>
+<symbol id="i-cpu" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="4" width="8" height="8" rx="1.3"/><path d="M6 1.8V4M10 1.8V4M6 12v2.2M10 12v2.2M1.8 6H4M1.8 10H4M12 6h2.2M12 10h2.2"/></g></symbol>
+<symbol id="i-trash" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 4.3h10.4M6.3 4.3V2.8h3.4v1.5M4.2 4.3l.7 9h6.2l.7-9"/><path d="M6.9 6.8v4M9.1 6.8v4"/></g></symbol>
+<symbol id="i-external" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.5h4v4M13.5 2.5L7.5 8.5"/><path d="M12 9.5v3.2a.8.8 0 0 1-.8.8H3.3a.8.8 0 0 1-.8-.8V4.8a.8.8 0 0 1 .8-.8h3.2"/></g></symbol>
+<symbol id="i-download" viewBox="0 0 16 16"><path d="M8 2.2v8M4.8 7.2L8 10.4l3.2-3.2M2.8 13.3h10.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 6.4A5.4 5.4 0 0 0 3.3 5M2.8 9.6a5.4 5.4 0 0 0 9.9 1.4"/><path d="M13.4 2.6v3.9H9.5M2.6 13.4V9.5h3.9"/></g></symbol>
+<symbol id="i-copy" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="5.3" y="5.3" width="8.4" height="8.4" rx="1.3"/><path d="M10.7 5.3V3.1a.8.8 0 0 0-.8-.8H3.1a.8.8 0 0 0-.8.8v6.8a.8.8 0 0 0 .8.8h2.2"/></g></symbol>
+<symbol id="i-terminal" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.8" y="2.8" width="12.4" height="10.4" rx="1.5"/><path d="M4.6 6.2L6.8 8l-2.2 1.8M8.4 10.2h3"/></g></symbol>
+<symbol id="i-upload" viewBox="0 0 16 16"><path d="M8 10.4v-8M4.8 5.4L8 2.2l3.2 3.2M2.8 13.3h10.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-folder" viewBox="0 0 16 16"><path d="M1.9 4.2a1 1 0 0 1 1-1h3.2l1.4 1.5h5.6a1 1 0 0 1 1 1v6.9a1 1 0 0 1-1 1H2.9a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+<symbol id="i-star" viewBox="0 0 16 16"><path d="M8 1.9l1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></symbol>
+<symbol id="i-lock" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.4"/><path d="M5.2 7V5.2a2.8 2.8 0 0 1 5.6 0V7"/></g></symbol>
+<symbol id="i-file" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 1.8h5.2l3 3v8.4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1z"/><path d="M9 1.8v3.2h3.2"/></g></symbol>
+<symbol id="i-arrow" viewBox="0 0 16 16"><path d="M2.8 8h10M9.2 4.4L12.8 8l-3.6 3.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-play" viewBox="0 0 16 16"><path d="M5 3.2l7.6 4.8L5 12.8z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></symbol>
+</svg>
+{%- endmacro %}
+
+{% macro icon(name, cls="") -%}
+<svg class="ic{% if cls %} {{ cls }}{% endif %}{% if name == 'i-running' %} spin{% endif %}" aria-hidden="true" focusable="false"><use href="#{{ name }}"></use></svg>
+{%- endmacro %}
+
+{% macro chip(tone_class, icon_name, text, cls="") -%}
+<span class="chip {{ tone_class }}{% if cls %} {{ cls }}{% endif %}">{{ icon(icon_name) }}<span>{{ text }}</span></span>
+{%- endmacro %}
+
+{% macro verdict_chip(verdict, cls="") -%}
+{{ chip(verdict|verdict_class, verdict|verdict_icon, verdict|verdict_label, cls) }}
+{%- endmacro %}
+
+{% macro status_chip(status, cls="") -%}
+{{ chip(status|status_class, status|status_icon, status|status_label, cls) }}
+{%- endmacro %}
+
+{% macro score_inline(score) -%}
+{%- set t = score|fmt_score -%}
+{%- if t != "—" -%}<span class="score-inline"><span class="n">{{ t }}</span><span class="d">/100</span></span>
+{%- else -%}<span class="muted">no score</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro scorebar(score, verdict) -%}
+{%- if score|fmt_score != "—" -%}<span class="bar thin {{ verdict|verdict_class }}" aria-hidden="true"><span class="fill w-{{ score|pct_step }}"></span></span>{%- endif -%}
+{%- endmacro %}
+
+{#- Axis-score meter; `score` is already on the 0..100 scale. -#}
+{% macro meter(score, pass_line=75) -%}
+{%- if score is number -%}
+<span class="meter"><span class="meter-track" aria-hidden="true"><span class="meter-fill{% if score < pass_line %} below{% endif %} w-{{ score|pct_step }}"></span><span class="meter-pass l-{{ pass_line|pct_step }}"></span></span><span class="meter-num">{{ score|fmt_score }}</span></span>
+{%- else -%}<span class="muted">—</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro counts(run) -%}
+{%- set cs = run|module_counts -%}
+{%- if cs -%}<span class="counts">{% for c in cs %}<span class="count tone-{{ c.tone }}" title="{{ c.text }}">{{ icon(c.icon) }}{{ c.n }}<span class="visually-hidden"> {{ c.label|lower }}</span></span>{% endfor %}</span>
+{%- else -%}<span class="muted">—</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro time(value) -%}
+{%- set iso = value|fmt_iso -%}
+{%- if iso -%}<time datetime="{{ iso }}" title="{{ iso }}">{{ value|fmt_time }}</time>{%- else -%}{{ value|fmt_time }}{%- endif -%}
+{%- endmacro %}
+
+{% macro csrf_field(token) -%}
+<input type="hidden" name="csrf" value="{{ token or '' }}">
+{%- endmacro %}
+
+{% macro gate_badge(gate) -%}
+{%- if gate == "hard" -%}<span class="badge gate-hard" title="A failure blocks promotion and fails CI">hard gate</span>
+{%- elif gate == "warn" -%}<span class="badge gate-warn" title="A failure is reported but does not block">warn gate</span>
+{%- elif gate -%}<span class="badge">{{ gate }}</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro screening_badge() -%}
+<span class="badge screening" title="Screening test: it can find evidence of a problem but cannot prove its absence">{{ icon("i-screen") }}<span>Screening</span></span>
+{%- endmacro %}
+
+{% macro copy_button(target_id, label="Copy") -%}
+<button type="button" class="btn small ghost js-only" data-copy="{{ target_id }}" aria-label="{{ label }} to the clipboard">{{ icon("i-copy") }}<span>{{ label }}</span></button>
+{%- endmacro %}
+
+{#- A shell command with a copy button; `id` must be unique on the page. -#}
+{% macro cmd(id, text) -%}
+<div class="cmd"><pre><span class="cmd-prompt" aria-hidden="true">$ </span><code id="{{ id }}">{{ text }}</code></pre>{{ copy_button(id) }}</div>
+{%- endmacro %}
+
+{#- A copyable minimal adapter (collapsed); `id` must be unique on the page. -#}
+{% macro adapter_skeleton(text, id) -%}
+<details class="more skeleton" data-adapter-skeleton>
+<summary>Adapter skeleton to copy</summary>
+<div class="more-body">
+<div class="cmd"><pre class="code"><code id="{{ id }}">{{ text }}</code></pre>{{ copy_button(id) }}</div>
+<p class="help">Save it next to your model as <code>adapter.py</code>, edit the values, then upload both on the New run page (“Advanced: own adapter”). The bundled examples in <code>examples/</code> of the MalValid source show complete adapters for LightGBM and XGBoost.</p>
+</div>
+</details>
+{%- endmacro %}
+
+{#- One-click form that submits the bundled synthetic demo in path mode. -#}
+{% macro demo_form(demo, csrf_token) -%}
+<form method="post" action="{{ root }}/runs" enctype="multipart/form-data" data-demo-form>
+{{ csrf_field(csrf_token) }}
+<input type="hidden" name="mode" value="path">
+<input type="hidden" name="adapter_path" value="{{ demo.adapter_path }}">
+<input type="hidden" name="config_path" value="{{ demo.config_path }}">
+<input type="hidden" name="title" value="{{ demo.title }}">
+<button type="submit" class="btn">{{ icon("i-play") }}<span>Run the synthetic demo</span></button>
+</form>
+{%- endmacro %}
+
+{#- The 0-100 verdict scale (bands + score marker), from report_view(...).verdict. -#}
+{% macro scale(vd) -%}
+{%- set cm = vd.cond_min|pct_step -%}
+{%- set rm = vd.ready_min|pct_step -%}
+<div class="scale" role="img" aria-label="Score {{ vd.score|fmt_score }} on a 0 to 100 scale: not ready below {{ cm }}, conditional from {{ cm }}, ready from {{ rm }}.">
+<div class="scale-track">
+<span class="band band-serious l-0 w-{{ cm }}"></span>
+<span class="band band-warning l-{{ cm }} w-{{ rm - cm }}"></span>
+<span class="band band-good l-{{ rm }} w-{{ 100 - rm }}"></span>
+{% if vd.show_cap %}<span class="cap-mark l-{{ vd.cap|pct_step }}"><span class="cap-lbl">blocked cap {{ vd.cap|fmt_score(0) }}</span></span>{% endif %}
+{% if vd.raw is not none %}<span class="marker marker-raw l-{{ vd.raw|pct_step }}" title="uncapped score {{ vd.raw|fmt_score }}"></span>{% endif %}
+{% if vd.score is not none %}<span class="marker l-{{ vd.score|pct_step }}"></span>{% endif %}
+</div>
+<div class="scale-labels" aria-hidden="true"><span class="first l-0">0</span><span class="l-{{ cm }}">{{ cm }}</span><span class="l-{{ rm }}">{{ rm }}</span><span class="last l-100">100</span></div>
+<p class="scale-legend" aria-hidden="true"><span><i class="k-serious"></i>Not ready</span><span><i class="k-warning"></i>Conditional</span><span><i class="k-good"></i>Ready</span></p>
+</div>
+{%- endmacro %}
+
+{#- One row of the live module list (app.js builds the same markup). -#}
+{% macro module_row(m) -%}
+<li class="status-{{ m.status }}" data-module="{{ m.id }}">
+<span>{{ chip("tone-" ~ m.tone, m.icon, m.status_label) }}</span>
+<span class="mod-code">{{ m.code }}</span>
+<span class="mod-title">{{ m.title }}</span>
+<span class="mod-dur">{% if m.duration_s is not none and m.status in ("pass", "warn", "fail", "error") %}{{ m.duration_s|fmt_duration }}{% endif %}</span>
+</li>
+{%- endmacro %}
+
+{% macro stepper(steps) -%}
+<ol class="stepper" data-live-steps>
+{% for s in steps %}<li class="{{ s.state }}" data-step="{{ s.key }}"{% if s.state == "current" %} aria-current="step"{% endif %}>{{ icon("i-check" if s.state == "done" else ("i-running" if s.state == "current" else "i-pending")) }}<span>{{ s.label }}<span class="visually-hidden">{% if s.state == "done" %} (done){% elif s.state == "current" %} (in progress){% endif %}</span></span></li>
+{% endfor %}
+</ol>
+{%- endmacro %}

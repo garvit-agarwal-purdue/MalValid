@@ -1,0 +1,4 @@
+# Trained demo artifacts: keep them byte-for-byte (no line-ending conversion on Windows checkouts).
+model.txt          -text
+threshold.txt      -text
+train_sha256.txt   -text

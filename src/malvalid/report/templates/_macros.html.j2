@@ -1,0 +1,92 @@
+{#- Reusable pieces of the MalValid HTML report. Every status is color + icon + text. -#}
+
+{% macro sprite() -%}
+<svg class="sprite" aria-hidden="true" focusable="false">
+<symbol id="i-pass" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 8.3l2.1 2.1L11.2 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-warn" viewBox="0 0 16 16"><path d="M8 1.9l6.6 11.6H1.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.2v3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11.6" r="0.95" fill="currentColor"/></symbol>
+<symbol id="i-fail" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="i-skip" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.2 1.8"/><path d="M5.2 8h5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="i-error" viewBox="0 0 16 16"><path d="M5.3 1.6h5.4l3.7 3.7v5.4l-3.7 3.7H5.3l-3.7-3.7V5.3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 4.8v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.95" fill="currentColor"/></symbol>
+<symbol id="i-block" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.4 12.6l9.2-9.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+<symbol id="i-unknown" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.1 6.3a1.95 1.95 0 1 1 2.7 1.8c-.5.2-.8.6-.8 1.1v.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.5" r="0.9" fill="currentColor"/></symbol>
+<symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="4.9" r="0.95" fill="currentColor"/></symbol>
+<symbol id="i-screen" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.3 10.3L14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="i-theme" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></symbol>
+</svg>
+{%- endmacro %}
+
+{% macro icon(name, size="") -%}
+<svg class="ic{% if size %} ic-{{ size }}{% endif %}" aria-hidden="true" focusable="false"><use href="#{{ name }}"></use></svg>
+{%- endmacro %}
+
+{% macro chip(tone, icon_name, text, cls="") -%}
+<span class="chip tone-{{ tone }}{% if cls %} {{ cls }}{% endif %}">{{ icon(icon_name) }}<span>{{ text }}</span></span>
+{%- endmacro %}
+
+{% macro screening_badge() -%}
+<span class="badge screening" title="Screening test: can find evidence of a problem, cannot prove its absence">{{ icon("i-screen") }}<span>Screening</span></span>
+{%- endmacro %}
+
+{% macro gate_badge(gate) -%}
+{% if gate == "hard" %}<span class="badge gate-hard" title="A failure blocks promotion and fails CI">hard gate</span>{% elif gate == "warn" %}<span class="badge gate-warn" title="A failure is reported but does not block">warn gate</span>{% else %}<span class="badge">{{ gate }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro meter(score, pass_line) -%}
+{% if score is not none %}
+<span class="meter" role="img" aria-label="axis score {{ score|num(3) }} of 100"><span class="meter-track"><span class="meter-fill{% if score < pass_line %} below{% endif %}" style="width: {{ [[score, 0]|max, 100]|min }}%"></span><span class="meter-pass" style="left: {{ pass_line }}%"></span></span><span class="meter-num">{{ score|num(3) }}</span></span>
+{% else %}
+<span class="muted">—</span>
+{% endif %}
+{%- endmacro %}
+
+{% macro result(passed) -%}
+{% if passed is sameas true %}{{ chip("good", "i-pass", "pass") }}{% elif passed is sameas false %}{{ chip("critical", "i-fail", "fail") }}{% else %}{{ chip("neutral", "i-unknown", "not evaluated") }}{% endif %}
+{%- endmacro %}
+
+{% macro kv_table(rows, cls="") -%}
+{% if rows %}
+<table class="kvt{% if cls %} {{ cls }}{% endif %}"><tbody>
+{% for r in rows %}<tr><th scope="row">{{ r.k }}</th><td{% if r.mono %} class="mono"{% endif %}>{{ r.v }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% else %}
+<p class="muted small">Not recorded in this report.</p>
+{% endif %}
+{%- endmacro %}
+
+{% macro chart(c) -%}
+<figure class="chart" id="{{ c.id }}" data-chart="{{ c.id }}" data-key="{{ c.key }}">
+<figcaption><span class="chart-title">{{ c.title }}</span><code class="chart-key">{{ c.key }}</code>{% if c.subtitle %}<span class="chart-sub">{{ c.subtitle }}</span>{% endif %}</figcaption>
+{% if c.error %}
+<p class="callout tone-warning small">{{ icon("i-warn") }}<span>{{ c.error }}</span></p>
+{% else %}
+{% if c.legend %}<ul class="legend">{% for l in c.legend %}<li>{{ l.key }}<span>{{ l.label }}</span></li>{% endfor %}</ul>{% endif %}
+<div class="chart-body">{{ c.svg }}<div class="tip" role="status" aria-live="polite" hidden></div></div>
+{% if c.note %}<p class="chart-note">{{ c.note }}</p>{% endif %}
+<div class="chart-tools js-only no-print"><button type="button" class="btn small" data-act="table" aria-expanded="false">Show data</button><button type="button" class="btn small" data-act="csv">Download CSV</button></div>
+<div class="chart-table" hidden></div>
+{% endif %}
+</figure>
+{%- endmacro %}
+
+{% macro data_table(t) -%}
+<div class="artifact-table" data-key="{{ t.key }}">
+<h3 class="h3">{{ t.title }} <code class="chart-key">{{ t.key }}</code></h3>
+{% if t.rows %}
+<div class="table-wrap scroll-y"><table class="data">
+<thead><tr>{% for c in t.columns %}<th scope="col"{% if t.num_cols and t.num_cols[loop.index0] %} class="num"{% endif %}>{{ c }}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for r in t.rows %}<tr>{% for cell in r %}<td{% if cell.num %} class="num"{% endif %}>{{ cell.v }}</td>{% endfor %}</tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}
+<p class="muted small">No rows.</p>
+{% endif %}
+{% if t.truncated %}<p class="muted small">The module truncated this table to the first {{ t.rows|length }} rows.</p>{% endif %}
+{% if t.note %}<p class="chart-note">{{ t.note }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro section_error(obj) -%}
+{% if obj and obj.section_error %}<p class="callout tone-warning small">{{ icon("i-warn") }}<span>{{ obj.section_error }}</span></p>{% endif %}
+{%- endmacro %}

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MalValid
+GenericName=Malware-detector test bench
+Comment=Test a malware-detection model and get a verdict and a 0-100 score (local web UI)
+# Runs malvalid.sh from the folder this file sits in (%k is this file's path). Some file managers do not
+# run .desktop files from ordinary folders; then run ./install-desktop-entry.sh once, which installs a copy
+# with the absolute path into your applications menu (and, with --desktop, onto your desktop).
+Exec=sh -c "exec \\"\\$(dirname \\"\\$0\\")/malvalid.sh\\"" %k
+Terminal=true
+Icon=utilities-terminal
+Categories=Development;
+StartupNotify=false

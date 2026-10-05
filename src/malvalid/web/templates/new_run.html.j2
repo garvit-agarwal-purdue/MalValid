@@ -1,0 +1,345 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% set f = form or {} %}
+{% set dflt = defaults or {} %}
+{% set errors = (errors or [])|reject("none")|list %}
+{% set modules = modules or [] %}
+{% set corpora = corpora or [] %}
+{% set mode = (f.mode or "model")|string %}{% if mode not in ("model", "upload", "path") or (mode == "path" and not allow_path_mode) %}{% set mode = "model" %}{% endif %}
+{% set insp = inspect if inspect is mapping else none %}
+{% set stored = insp.file_name if (insp and insp.model_submission and f.model_submission == insp.model_submission) else none %}
+{% set f_kind = (f.model_kind or "")|string %}
+{% set f_fv = (f.feature_version or "")|string %}
+{% set thr_mode = "declared" if (f.threshold_mode|string == "declared" or (not f.threshold_mode and f.threshold)) else "calibrate" %}
+{% set cal_fpr = (f.calibrate_fpr or "0.005")|string %}
+{% set model_accept = ".txt,.model,.json,.ubj,.onnx,.pkl,.pickle,.joblib,.jbl" %}
+{% set seed_val = f.seed if (f.seed is not none and (f.seed|string)|length) else none %}
+{% set fail_on = (f.fail_on or dflt.fail_on or "blocked")|string %}
+{% set max_mb = max_upload_mb if max_upload_mb is number else none %}
+{% block title %}New run{% endblock %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>New run</h1>
+<p class="lede">Submit one trained detector: just its model file, or your own adapter for a custom model. MalValid scans the file, loads the model in a no-network sandbox, runs the test battery on a canonical corpus and returns a production-readiness verdict with a 0–100 score.</p>
+</div>
+</div>
+
+{% if reduced_isolation %}<p class="callout tone-warning" data-reduced-isolation>{{ ui.icon("i-warn") }}<span><strong>Reduced isolation: this platform has no OS sandbox.</strong> Models run in a separate worker process with pickle refusal and resource limits, but without network or file-system isolation, and every report is marked <code>isolation: process_only</code>. Only evaluate models whose origin you trust; for untrusted models use Linux with bubblewrap (or WSL2).</span></p>{% endif %}
+{% if notice %}<p class="callout tone-info" role="status" data-notice>{{ ui.icon("i-info") }}<span>{{ notice }}</span></p>{% endif %}
+
+{% if errors %}
+<div class="callout tone-critical" role="alert" tabindex="-1" id="form-errors" data-focus-on-load>
+{{ ui.icon("i-error") }}
+<div>
+<p><strong>The run was not started. {% if errors|length == 1 %}Fix this problem{% else %}Fix these {{ errors|length }} problems{% endif %} and submit again:</strong></p>
+<ul>{% for e in errors %}<li class="form-error-item">{{ e }}</li>{% endfor %}</ul>
+{% if mode == "upload" or (mode == "model" and not stored) %}<p class="small">Browsers cannot keep chosen files after an error, so choose the files again.</p>{% elif mode == "model" %}<p class="small">The model file you inspected is kept; choose any other files again.</p>{% endif %}
+</div>
+</div>
+{% endif %}
+
+<div class="grid-2">
+<form class="run-form" method="post" action="{{ root }}/runs" enctype="multipart/form-data" data-run-form{% if max_mb %} data-max-mb="{{ max_mb }}"{% endif %}>
+{{ ui.csrf_field(csrf_token) }}
+
+<fieldset>
+<legend>1. Your model</legend>
+<p class="legend-sub">Upload the trained model file. MalValid reads its kind and number of features from the file, so you do not need to write any code.</p>
+<div class="mode-switch" role="radiogroup" aria-label="How to submit the detector">
+<label class="mode-option choice"><input type="radio" name="mode" value="model" data-mode-radio{% if mode == "model" %} checked{% endif %}><span class="choice-body">{{ ui.icon("i-upload") }} Upload your model<span class="help">Just the model file: LightGBM, XGBoost or ONNX. Recommended.</span></span></label>
+{% if allow_path_mode %}<label class="mode-option choice"><input type="radio" name="mode" value="path" data-mode-radio{% if mode == "path" %} checked{% endif %}><span class="choice-body">{{ ui.icon("i-folder") }} Use files on this machine<span class="help">Point at a model file, or at your own adapter <code>.py</code>, already on disk.</span></span></label>{% endif %}
+<label class="mode-option choice"><input type="radio" name="mode" value="upload" data-mode-radio{% if mode == "upload" %} checked{% endif %}><span class="choice-body">{{ ui.icon("i-file") }} Advanced: own adapter<span class="help">Upload a Python adapter that wraps a custom model, plus the files it loads.</span></span></label>
+</div>
+
+<div class="mode-panel" data-mode-panel="model">
+<p class="mode-panel-title no-js">For “Upload your model”</p>
+<div class="field">
+<label for="model_file">Model file <span class="opt">.txt .model .json .ubj .onnx</span></label>
+<input type="file" id="model_file" name="model_file" accept="{{ model_accept }}" aria-describedby="model_file-help" data-size-check data-pickle-check>
+<input type="hidden" name="model_submission" value="{{ f.model_submission if stored else '' }}" data-model-submission>
+<p class="stored-model" data-stored-model="{{ stored or '' }}"{% if not stored %} hidden{% endif %}>{{ ui.icon("i-file") }}<span data-stored-model-text>{% if stored %}Using uploaded <strong>{{ stored }}</strong>{% if insp.size is not none %} ({{ insp.size|fmt_bytes }}){% endif %} — choose a file to replace it.{% endif %}</span></p>
+<p class="help" id="model_file-help">LightGBM text (<code>.txt</code> / <code>.model</code>), XGBoost <code>.json</code> / <code>.ubj</code> and ONNX <code>.onnx</code> are read as data and loaded safely. scikit-learn and other pickle-based files (<code>.pkl</code>, <code>.joblib</code>) need “Allow pickle” below, and you choose their kind and feature version yourself.{% if max_mb %} Up to {{ max_mb }} MB.{% endif %}</p>
+<p class="inline-warn" data-pickle-warning hidden>{{ ui.icon("i-warn") }}<span>This looks like a pickle file. The run will be refused unless you tick “Allow pickle-based model files” in Safety, and pickles can execute code when loaded.</span></p>
+</div>
+<div class="inspect-row">
+<button type="submit" class="btn" formaction="{{ root }}/runs/inspect" formnovalidate data-inspect>{{ ui.icon("i-check") }}<span>Inspect model</span></button>
+<p class="help">Reads the file (nothing is run) and fills in the model kind and feature version below. Optional: “Start run” detects them too.</p>
+</div>
+<div class="inspect-result" data-inspect-result aria-live="polite"{% if not insp %} hidden{% endif %}>
+{% if insp %}
+{% if insp.error %}
+<div class="callout tone-critical">{{ ui.icon("i-error") }}<div><p><strong>Could not inspect {{ insp.file_name }}.</strong></p><p>{{ insp.error }}</p></div></div>
+{% else %}
+<div class="callout {% if insp.errors %}tone-critical{% elif insp.ok %}tone-good{% else %}tone-warning{% endif %}">{{ ui.icon("i-error" if insp.errors else ("i-pass" if insp.ok else "i-warn")) }}<div>
+<p><strong>{% if insp.errors %}{{ insp.file_name }} cannot be evaluated as it is.{% elif insp.ok %}Detected from {{ insp.file_name }}.{% else %}Detected from {{ insp.file_name }}; choose what is missing below.{% endif %}</strong></p>
+<dl class="facts compact">
+<dt>Format</dt><dd>{{ insp.format or "unknown" }}</dd>
+<dt>Model kind</dt><dd>{{ insp.model_kind or "not detected" }}</dd>
+<dt>Features</dt><dd>{% if insp.n_features is not none %}{{ insp.n_features }}{% else %}unknown{% endif %}</dd>
+<dt>Feature version</dt><dd>{% if insp.feature_version %}{{ insp.feature_version }}{% elif insp.n_features is not none %}no match{% else %}not detected{% endif %}</dd>
+{% if insp.default_corpus %}<dt>Default corpus</dt><dd>{{ insp.default_corpus }} <span class="muted">(used when Corpus is Auto)</span></dd>{% endif %}
+</dl>
+{% if insp.errors %}<ul>{% for e in insp.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+{% if insp.notes %}<ul class="small">{% for n in insp.notes %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
+{% if insp.is_pickle %}<p class="inline-warn">{{ ui.icon("i-warn") }}<span>A pickle-based file: MalValid never unpickles it to look inside, so choose its model kind and feature version yourself, and tick “Allow pickle-based model files” only for a model you trust.</span></p>{% endif %}
+</div></div>
+{% endif %}
+{% endif %}
+</div>
+</div>
+
+{% if allow_path_mode %}
+<div class="mode-panel" data-mode-panel="path">
+<p class="mode-panel-title no-js">For “Use files on this machine”</p>
+<div class="field">
+<label for="adapter_path">Model file or adapter path</label>
+<input type="text" class="mono-input" id="adapter_path" name="adapter_path" value="{{ f.adapter_path or '' }}" placeholder="/home/you/models/lgbm-rc2.txt" autocomplete="off" spellcheck="false" aria-describedby="adapter_path-help">
+<p class="help" id="adapter_path-help">Absolute path to a model file (the model settings below apply), or to your own adapter <code>.py</code>, whose <code>model_path</code> and <code>training_hashes_path</code> resolve relative to its folder.</p>
+</div>
+<div class="field">
+<label for="training_hashes_path">Training hash list path <span class="opt">optional · model file only</span></label>
+<input type="text" class="mono-input" id="training_hashes_path" name="training_hashes_path" value="{{ f.training_hashes_path or '' }}" placeholder="/home/you/models/train_sha256.txt" autocomplete="off" spellcheck="false" aria-describedby="training_hashes_path-help">
+<p class="help" id="training_hashes_path-help">One training-sample sha256 per line. Without it, M4 membership inference does not run, which lowers coverage and the score.</p>
+</div>
+<div class="field">
+<label for="config_path">Gate policy path <span class="opt">optional</span></label>
+<input type="text" class="mono-input" id="config_path" name="config_path" value="{{ f.config_path or '' }}" placeholder="/home/you/gate.yaml" autocomplete="off" spellcheck="false" aria-describedby="config_path-help">
+<p class="help" id="config_path-help">A <code>gate.yaml</code> on this machine (<code>malvalid init-config gate.yaml</code> writes one to edit). Leave it empty to use the server's default policy.</p>
+</div>
+</div>
+{% endif %}
+
+<div class="mode-panel" data-mode-panel="upload">
+<p class="mode-panel-title no-js">For “Advanced: own adapter”</p>
+<div class="field">
+<label for="adapter_file">Adapter file <span class="opt">.py</span></label>
+<input type="file" id="adapter_file" name="adapter_file" accept=".py" aria-describedby="adapter_file-help" data-size-check>
+<p class="help" id="adapter_file-help">The Python file with your detector class. It declares <code>feature_version</code>, <code>model_kind</code>, <code>operating_threshold</code>, <code>training_hashes_path</code> and <code>training_cutoff</code>, and implements <code>load()</code> and <code>predict_proba(X)</code>.</p>
+</div>
+<div class="field">
+<label for="model_files">Model files <span class="opt">one or more</span></label>
+<input type="file" id="model_files" name="model_files" multiple accept=".txt,.json,.ubj,.model,.onnx,.pkl,.pickle,.joblib,.jbl" aria-describedby="model_files-help" data-size-check data-pickle-check>
+<p class="help" id="model_files-help">The files your adapter loads. Keep the file names its <code>model_path</code> uses: everything you upload lands side by side in one folder.{% if max_mb %} Up to {{ max_mb }} MB per file.{% endif %}</p>
+<p class="inline-warn" data-no-model-warning hidden>{{ ui.icon("i-warn") }}<span>No model file chosen. Upload the file your adapter's <code>model_path</code> names (with that exact name), or the run fails as soon as it starts.</span></p>
+</div>
+</div>
+
+<div class="mode-panel" data-mode-panel="upload path">
+<p class="mode-panel-title no-js">For an adapter (“Advanced: own adapter”, or an adapter path)</p>
+<div class="field">
+<label for="class_name">Adapter class <span class="opt">optional</span></label>
+<input type="text" class="mono-input" id="class_name" name="class_name" value="{{ f.class_name or '' }}" placeholder="MyDetector" autocomplete="off" spellcheck="false" aria-describedby="class_name-help">
+<p class="help" id="class_name-help">Only needed when the adapter file defines more than one detector class. Leave it empty for a model file.</p>
+</div>
+</div>
+
+<div class="mode-panel" data-mode-panel="model path">
+<p class="mode-panel-title no-js">Model settings (for a model file)</p>
+<div class="fields-2">
+<div class="field">
+<label for="model_kind">Model kind</label>
+<select id="model_kind" name="model_kind" aria-describedby="model_kind-help">
+<option value=""{% if not f_kind or f_kind == "auto" %} selected{% endif %}>Auto-detect</option>
+{% for k in ("lightgbm", "xgboost", "sklearn_gbdt", "onnx") %}<option value="{{ k }}"{% if f_kind == k %} selected{% endif %}>{{ k }}</option>
+{% endfor %}
+</select>
+<p class="detected" data-detected="model_kind"{% if not (insp and insp.model_kind) %} hidden{% endif %}>{% if insp and insp.model_kind %}{{ ui.icon("i-pass") }}detected from model: {{ insp.model_kind }}{% if insp.is_pickle %} (a guess from a static scan of the pickle){% endif %}{% endif %}</p>
+<p class="help" id="model_kind-help">Auto-detect reads it from the file. Choose it for a pickle.</p>
+</div>
+<div class="field">
+<label for="feature_version">Feature version</label>
+<select id="feature_version" name="feature_version" aria-describedby="feature_version-help">
+<option value=""{% if not f_fv or f_fv == "auto" %} selected{% endif %}>Auto-detect</option>
+<option value="ember_v2"{% if f_fv == "ember_v2" %} selected{% endif %}>ember_v2 (2381 features)</option>
+<option value="ember_v3"{% if f_fv == "ember_v3" %} selected{% endif %}>ember_v3 (2568 features)</option>
+</select>
+<p class="detected" data-detected="feature_version"{% if not (insp and (insp.feature_version or insp.n_features is not none)) %} hidden{% endif %}>{% if insp and insp.feature_version %}{{ ui.icon("i-pass") }}detected from model: {{ insp.feature_version }} ({{ insp.n_features }} features){% elif insp and insp.n_features is not none %}{{ ui.icon("i-warn") }}the model expects {{ insp.n_features }} features, which matches neither{% endif %}</p>
+<p class="help" id="feature_version-help">The EMBER feature space the model was trained on, found from its number of input features.</p>
+</div>
+</div>
+<div class="field" role="radiogroup" aria-labelledby="threshold-label">
+<p class="field-label" id="threshold-label">Operating threshold</p>
+<div class="threshold-choice">
+<label class="choice"><input type="radio" name="threshold_mode" value="calibrate" data-threshold-mode{% if thr_mode == "calibrate" %} checked{% endif %} aria-describedby="calibrate-help"><span class="choice-body">Calibrate it for me</span></label>
+<div class="subfield">
+<label for="calibrate_fpr" class="visually-hidden">Target false-positive rate</label>
+<select id="calibrate_fpr" name="calibrate_fpr">
+<option value="0.001"{% if cal_fpr in ("0.001", "0.1%") %} selected{% endif %}>0.1% false positives</option>
+<option value="0.005"{% if cal_fpr not in ("0.001", "0.1%", "0.01", "1%") %} selected{% endif %}>0.5% false positives</option>
+<option value="0.01"{% if cal_fpr in ("0.01", "1%") %} selected{% endif %}>1% false positives</option>
+</select>
+<p class="help" id="calibrate-help">MalValid sets the score cut-off so that this share of benign files is flagged, measured on a held-out slice of the corpus (benign evaluation rows picked by file hash) that no test uses. The report says the threshold was calibrated rather than declared.</p>
+</div>
+<label class="choice"><input type="radio" name="threshold_mode" value="declared" data-threshold-mode{% if thr_mode == "declared" %} checked{% endif %} aria-describedby="threshold-help"><span class="choice-body">Use the threshold I ship</span></label>
+<div class="subfield">
+<label for="threshold" class="visually-hidden">Declared threshold</label>
+<input type="number" id="threshold" name="threshold" value="{{ f.threshold or '' }}" min="0" max="1" step="any" inputmode="decimal" placeholder="0.8336">
+<p class="help" id="threshold-help">The score in [0, 1] at or above which your product flags a file. The verdict then describes your real operating point.</p>
+</div>
+</div>
+</div>
+<div class="field">
+<label for="training_cutoff">Training cutoff <span class="opt">optional · YYYY-MM</span></label>
+<input type="month" id="training_cutoff" name="training_cutoff" value="{{ f.training_cutoff or '' }}" placeholder="2018-10" pattern="[0-9]{4}-[0-9]{2}(-[0-9]{2})?" aria-describedby="training_cutoff-help">
+<p class="help" id="training_cutoff-help">Month of the newest training sample. It unlocks <strong>M2 temporal drift</strong>; skip it and M2 does not run, which lowers coverage and the score.</p>
+</div>
+</div>
+
+<div class="mode-panel" data-mode-panel="model upload">
+<p class="mode-panel-title no-js">Optional files (“Upload your model” and “Advanced: own adapter”)</p>
+<div class="field">
+<label for="manifest_file">Training hash list <span class="opt">optional · .txt .csv .tsv</span></label>
+<input type="file" id="manifest_file" name="manifest_file" accept=".txt,.csv,.tsv" aria-describedby="manifest_file-help" data-size-check>
+<p class="help" id="manifest_file-help">One training-sample sha256 per line, or a CSV/TSV with a <code>sha256</code> column. It unlocks <strong>M4 membership inference</strong> and keeps your own training samples out of the evaluation rows; skip it and M4 does not run, which lowers coverage and the score. With your own adapter, keep the name its <code>training_hashes_path</code> uses.</p>
+</div>
+<div class="field">
+<label for="config_file">Gate policy <span class="opt">optional · .yaml .yml</span></label>
+<input type="file" id="config_file" name="config_file" accept=".yaml,.yml" aria-describedby="config_file-help" data-size-check>
+<p class="help" id="config_file-help">Your thresholds, hard and warn gates, and verdict weights. Leave it empty to use the <a href="{{ root }}/modules#policy">default policy</a>.</p>
+</div>
+</div>
+
+<div class="field mode-panel">
+<label for="title">Run title <span class="opt">optional</span></label>
+<input type="text" id="title" name="title" value="{{ f.title or '' }}" placeholder="LightGBM rc-2, EMBER2018 features" maxlength="200" aria-describedby="title-help">
+<p class="help" id="title-help">Shown on the dashboard and at the top of the report.</p>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>2. Evaluation</legend>
+<p class="legend-sub">What the model is tested on. Anything left empty comes from the gate policy.</p>
+<div class="fields-2">
+<div class="field">
+<label for="corpus">Canonical corpus</label>
+<select id="corpus" name="corpus" aria-describedby="corpus-help">
+{% set policy_label = "Policy default" ~ ((" (" ~ dflt.corpus ~ ")") if dflt.corpus else "") %}
+<option value="" data-corpus-auto data-label-model="Auto (matches the model's feature version)" data-label-upload="{{ policy_label }}" data-label-path="Auto (a model file's feature version, else the policy default)">{% if mode == "model" %}Auto (matches the model's feature version){% elif mode == "path" %}Auto (a model file's feature version, else the policy default){% else %}{{ policy_label }}{% endif %}</option>
+{% for c in corpora %}{% if c.name %}<option value="{{ c.name }}"{% if f.corpus == c.name %} selected{% endif %}>{{ c.name }} · {{ c.feature_version or "unknown feature version" }}{% if c.synthetic %} · synthetic{% endif %}{% if not c.available %} · not installed{% endif %}</option>{% endif %}
+{% endfor %}
+</select>
+<p class="help" id="corpus-help">Must match the model's feature version: an <code>ember_v2</code> model needs an <code>ember_v2</code> corpus. Auto picks the right one for a model file; on a mismatch, every test that needs the feature space is skipped. Synthetic corpora only exercise the pipeline. <a href="{{ root }}/corpora">See what is installed</a>.</p>
+</div>
+{% if allow_path_mode %}
+<div class="field">
+<label for="corpus_dir">Corpus directory <span class="opt">optional</span></label>
+<input type="text" class="mono-input" id="corpus_dir" name="corpus_dir" value="{{ f.corpus_dir or '' }}" placeholder="$MALVALID_CORPUS_DIR/&lt;corpus&gt;" autocomplete="off" spellcheck="false" aria-describedby="corpus_dir-help">
+<p class="help" id="corpus_dir-help">Read the corpus from this folder (or from a root that contains it) instead of the default location.</p>
+</div>
+{% endif %}
+</div>
+<div class="fields-3">
+<div class="field">
+<label for="seed">Seed</label>
+<input type="number" id="seed" name="seed" value="{{ seed_val if seed_val is not none else '' }}" min="0" step="1" inputmode="numeric" aria-describedby="seed-help" placeholder="Policy default{% if dflt.seed is not none %} ({{ dflt.seed }}){% endif %}" data-default="{{ dflt.seed if dflt.seed is not none else '' }}">
+<p class="help" id="seed-help">Base random seed for subsampling and the randomized tests. Leave it empty to use the gate policy's <code>runtime.seed</code>. It is recorded in the report so the run can be reproduced.</p>
+</div>
+<div class="field">
+<label for="only">Run only <span class="opt">optional</span></label>
+<input type="text" class="mono-input" id="only" name="only" value="{{ f.only or '' }}" placeholder="M1,M2" autocomplete="off" spellcheck="false" aria-describedby="only-help">
+<p class="help" id="only-help">Module codes or ids, comma-separated. M0 always runs. Tests you leave out count as skipped and lower coverage.</p>
+</div>
+<div class="field">
+<label for="skip">Skip <span class="opt">optional</span></label>
+<input type="text" class="mono-input" id="skip" name="skip" value="{{ f.skip or '' }}" placeholder="M6" autocomplete="off" spellcheck="false" aria-describedby="skip-help">
+<p class="help" id="skip-help">Modules not to run, comma-separated.</p>
+</div>
+</div>
+{% if modules %}
+<details class="more">
+<summary>Module codes and what each test needs</summary>
+<div class="more-body table-wrap">
+<table class="mod-ref">
+<thead><tr><th scope="col">Code</th><th scope="col">Test</th><th scope="col">Default</th><th scope="col">Needs</th></tr></thead>
+<tbody>
+{% for m in modules %}
+<tr><td><span class="code">{{ m.code or "?" }}</span></td><td>{{ m.title or m.id }}{% if m.id %} <code class="muted">{{ m.id }}</code>{% endif %}</td><td class="nowrap">{% if m.enabled_by_default is sameas false %}off{% else %}on{% endif %}{% if m.default_gate %} · {{ m.default_gate }}{% endif %}</td><td>{% set reqs = (m.requires or []) %}{% for r in reqs %}{{ r|requirement_label }}{% if not loop.last %}, {% endif %}{% endfor %}{% if m.requires_any %}{% if reqs %}; {% endif %}one of {% for r in m.requires_any %}{{ r|requirement_label }}{% if not loop.last %} / {% endif %}{% endfor %}{% endif %}{% if not reqs and not m.requires_any %}<span class="muted">nothing</span>{% endif %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</details>
+{% endif %}
+</fieldset>
+
+<fieldset>
+<legend>3. CI exit code</legend>
+<div class="field">
+<label for="fail_on">Fail on</label>
+<select id="fail_on" name="fail_on" aria-describedby="fail_on-help">
+<option value="blocked"{% if fail_on == "blocked" %} selected{% endif %}>blocked: exit 1 only when the run is Blocked</option>
+<option value="not_ready"{% if fail_on == "not_ready" %} selected{% endif %}>not_ready: also exit 1 when Not ready</option>
+<option value="conditional"{% if fail_on == "conditional" %} selected{% endif %}>conditional: exit 1 unless the verdict is Ready</option>
+</select>
+<p class="help" id="fail_on-help">Sets the run's exit code, which a CI pipeline reads as pass or fail. It never changes the verdict or the score. Exit 0 means passed; 1 means Blocked, or a verdict at or below this level; 2 means a module errored or the model could not be loaded, so the result is not trustworthy.</p>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>4. Safety</legend>
+<p class="legend-sub">{% if allow_no_sandbox %}Both options weaken{% else %}This option weakens{% endif %} MalValid's protection against a malicious or broken model file. Leave {% if allow_no_sandbox %}them{% else %}it{% endif %} off unless you know you need {% if allow_no_sandbox %}them{% else %}it{% endif %}.</p>
+<div class="risk tone-warning">
+<label class="choice"><input type="checkbox" id="allow_pickle" name="allow_pickle" value="on"{% if f.allow_pickle|truthy %} checked{% endif %} aria-describedby="allow_pickle-help"><span class="choice-body">Allow pickle-based model files<span class="help" id="allow_pickle-help">Pickle files (<code>.pkl</code>, <code>.pickle</code>, <code>.joblib</code>) can run arbitrary code the moment they are loaded, so MalValid refuses them by default and M0 blocks the run. Tick this only for a model you trained yourself. The file is still scanned first and loaded inside the sandbox. Safer: re-export to LightGBM <code>.txt</code>, XGBoost <code>.json</code> or ONNX.</span></span></label>
+</div>
+{% if allow_no_sandbox %}
+<div class="risk tone-critical">
+<label class="choice"><input type="checkbox" id="no_sandbox" name="no_sandbox" value="on"{% if f.no_sandbox|truthy %} checked{% endif %} aria-describedby="no_sandbox-help" data-no-sandbox><span class="choice-body">Run without the sandbox<span class="help" id="no_sandbox-help">Loads your model inside the MalValid process with no network or file-system isolation. A hostile model file could read your files, reach the network or damage this machine. Use it only to debug a model you trust.</span></span></label>
+<label class="choice confirm" data-no-sandbox-confirm><input type="checkbox" id="confirm_no_sandbox" name="confirm_no_sandbox" value="on"{% if f.confirm_no_sandbox|truthy %} checked{% endif %}><span class="choice-body">I understand the model will run without isolation on this machine</span></label>
+</div>
+{% else %}
+<p class="help" data-no-sandbox-disabled>Every model loads in the sandbox: running without it is disabled on this server.</p>
+{% endif %}
+</fieldset>
+
+<section class="card validation" data-validation-result aria-live="polite" aria-labelledby="validation-h" hidden>
+<h2 id="validation-h">Adapter validation</h2>
+<div data-validation-body></div>
+</section>
+
+<div class="form-actions">
+<p class="small muted">The run starts in the background; you can close this tab and come back.</p>
+<div class="btn-row">
+<button type="button" class="btn js-only" data-validate data-adapter-only title="Checks the adapter against the submission contract without running the tests">{{ ui.icon("i-check") }}<span>Validate adapter</span></button>
+<button type="submit" class="btn primary">{{ ui.icon("i-play") }}<span>Start run</span></button>
+</div>
+</div>
+</form>
+
+<aside class="side" aria-label="Help">
+{% if demo %}
+<section class="card" data-demo>
+<h2>Try it first</h2>
+<p class="small">Run the bundled demo detector on the synthetic corpus to see a complete run and report in about a minute. It checks the pipeline; its verdict says nothing about a real model.</p>
+{{ ui.demo_form(demo, csrf_token) }}
+</section>
+{% endif %}
+<section class="card">
+<h2>Before you start</h2>
+<ul>
+<li>Have the model file: LightGBM <code>.txt</code>, XGBoost <code>.json</code> / <code>.ubj</code> or ONNX, trained on EMBER v2 (2381) or v3 (2568) features. <strong>Inspect model</strong> shows what MalValid detects.</li>
+<li>Know the score cut-off you ship, or let MalValid calibrate one on held-out data (the report says which).</li>
+<li>A corpus in that feature version is installed: <a href="{{ root }}/corpora">Corpora</a>.</li>
+<li>The training hash list unlocks M4 and the training cutoff unlocks M2; without them those tests are skipped and coverage drops.</li>
+<li>A custom model (your own feature pipeline or code) needs an adapter: choose <strong>Advanced: own adapter</strong>. <strong>Validate adapter</strong> then loads it in the sandbox and probes it in seconds.</li>
+</ul>
+{% if adapter_skeleton %}{{ ui.adapter_skeleton(adapter_skeleton, "skeleton-new") }}{% endif %}
+</section>
+<section class="card">
+<h2>Same run from a terminal</h2>
+<div class="cmd"><pre><span class="cmd-prompt" aria-hidden="true">$ </span><code id="cli-preview" data-cli-preview>{% if mode == "upload" %}malvalid run --adapter my_adapter.py{% elif mode == "path" and f.adapter_path and (f.adapter_path|string).endswith(".py") %}malvalid run --adapter {{ f.adapter_path }}{% else %}malvalid run --model {{ stored or (f.adapter_path if mode == "path" and f.adapter_path else "my_model.txt") }} --calibrate-fpr 0.005{% endif %}</code></pre>{{ ui.copy_button("cli-preview") }}</div>
+<p class="help js-only">Updates as you fill in the form. Use it in CI; the exit code follows “Fail on”.</p>
+<p class="help no-js">Add <code>--model-kind</code>, <code>--feature-version</code>, <code>--threshold</code> or <code>--calibrate-fpr</code>, <code>--training-cutoff</code>, <code>--training-hashes</code>, <code>--config</code>, <code>--corpus</code>, <code>--seed</code>, <code>--only</code>, <code>--skip</code> and <code>--fail-on</code> to match the form.</p>
+</section>
+{% if default_config_text %}
+<section class="card">
+<details class="more">
+<summary>Default gate policy</summary>
+<div class="more-body"><pre class="code">{{ default_config_text }}</pre></div>
+</details>
+<p class="help">Used when you do not supply one. Thresholds and weights are policy, not physics: write a copy with <code>malvalid init-config gate.yaml</code> and tune it.</p>
+</section>
+{% endif %}
+</aside>
+</div>
+{% endblock %}

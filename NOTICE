@@ -1,0 +1,96 @@
+MalValid
+
+Copyright 2026 MalValid contributors
+
+This product includes software developed by third parties:
+
+---
+
+1. TESSERACT (tesseract-ml-release)
+   License: BSD-3-Clause
+   Copyright (c) 2018, Royal Holloway, University of London
+   Upstream: https://github.com/s2labres/tesseract-ml-release
+   File: src/malvalid/_vendor/tesseract_temporal.py
+
+   A subset of the temporal module (month_difference, time_aware_indexes,
+   get_relative_delta, resolve_date) is vendored as a fallback. The full
+   BSD-3-Clause license text is preserved in the file header along with
+   a list of modifications made for malvalid.
+
+---
+
+2. thrember (EMBER2024 reference featurizer)
+   License: Apache-2.0
+   Copyright: the EMBER2024 / thrember authors (Joyce et al.)
+   Upstream: https://github.com/FutureComputing4AI/EMBER2024
+   File: src/malvalid/schemas/_thrember_port.py
+
+   The vectorization logic for the ember_v3 feature schema is ported from
+   thrember's process_raw_features. The upstream Apache-2.0 license and
+   copyright are preserved in the file header. Modifications are documented
+   in that header.
+
+---
+
+3. EMBER2018 and EMBER2024 feature data
+   Licenses:
+     - EMBER2018 data files: MIT (the EMBER source repository is AGPL-3.0;
+       MalValid uses none of its code)
+     - EMBER2024 dataset and benchmark models: Apache-2.0 (per their Hugging
+       Face dataset and model cards). EMBER2024: "A Benchmark Dataset for
+       Holistic Evaluation of Malware Classifiers", Joyce et al., KDD 2025.
+   Upstream:
+     - EMBER2018: https://github.com/elastic/ember
+     - EMBER2024: https://huggingface.co/datasets/joyce8/EMBER2024
+                  https://huggingface.co/joyce8/EMBER2024-benchmark-models
+
+   The datasets are NOT redistributed with MalValid, with one exception:
+   three EMBER2018 raw feature records (feature JSON only: hashes, labels,
+   dates and feature values, no binaries) are embedded as test data in
+   tests/unit/test_schema_ember_v2.py. Canonical corpora (ember_v2_2018,
+   ember_v3_2024) are built locally by the user from their own download of
+   the published datasets. MalValid stores only feature vectors, SHA256
+   hashes, labels, and timestamps, never original binaries.
+
+   EMBER2024 data is used only for the canonical held-out evaluation and
+   temporal drift assessment. The models trained on these datasets are external
+   references (e.g., ember_model_2018.txt, EMBER2024_PE.model) used only for
+   correctness checks, not shipped with malvalid.
+
+   The EMBER2018 release (published by Endgame, Inc., now part of Elastic)
+   states that its data files are covered by the MIT License; it gives no
+   separate copyright line for them. The MIT permission notice, which applies
+   to the three embedded records:
+
+     Permission is hereby granted, free of charge, to any person obtaining a
+     copy of this software and associated documentation files (the
+     "Software"), to deal in the Software without restriction, including
+     without limitation the rights to use, copy, modify, merge, publish,
+     distribute, sublicense, and/or sell copies of the Software, and to
+     permit persons to whom the Software is furnished to do so, subject to
+     the following conditions:
+
+     The above copyright notice and this permission notice shall be included
+     in all copies or substantial portions of the Software.
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+     IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---
+
+Additional third-party dependencies (imported libraries) are declared in
+pyproject.toml under [project.dependencies] and [project.optional-dependencies].
+They are installed by the user, not redistributed with MalValid, and each is
+under its own license (see each package's metadata). Most are MIT, BSD or
+Apache-2.0; some transitive dependencies are not, for example tqdm (MPL-2.0 AND
+MIT), typing_extensions (PSF-2.0), shellingham (ISC), and, on Linux,
+nvidia-nccl-cu12, a proprietary NVIDIA library that xgboost pulls in. Check
+these before redistributing an environment or container image.
+
+The fragments in docs/_notice/ contain detailed third-party attribution per
+agent.

@@ -1,0 +1,136 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% set runs = runs or [] %}
+{% set active = active or [] %}
+{% set counts = counts or {} %}
+{% set rdir = runs_dir or "./malvalid-runs" %}
+{% set tiles = [
+  ("ready", "Ready", "tone-good", "i-pass"),
+  ("conditional", "Conditional", "tone-warning", "i-warn"),
+  ("not_ready", "Not ready", "tone-serious", "i-fail"),
+  ("blocked", "Blocked", "tone-critical", "i-block"),
+  ("running", "In progress", "tone-info", "i-clock"),
+  ("failed", "Failed runs", "tone-neutral", "i-error"),
+] %}
+{% block title %}Runs{% endblock %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>Runs</h1>
+<p class="lede">Production-readiness runs in <code class="wrap-any">{{ rdir }}</code>, newest first. Runs started here and runs made with <code>malvalid run</code> into this folder are both listed.</p>
+</div>
+<div class="btn-row">
+<a class="btn primary" href="{{ root }}/runs/new">{{ ui.icon("i-plus") }}<span>New run</span></a>
+</div>
+</div>
+
+{% if runs or active %}
+<section aria-labelledby="summary-h">
+<h2 class="visually-hidden" id="summary-h">Verdict summary</h2>
+<ul class="tiles" role="list">
+{% for key, label, tone, ic in tiles %}{% set n = counts[key] if counts[key] is number else 0 %}
+<li class="tile {{ tone }}{% if not n %} zero{% endif %}"><span class="tile-l">{{ ui.icon(ic) }}<span>{{ label }}</span></span><span class="tile-n">{{ n }}</span></li>
+{% endfor %}
+</ul>
+</section>
+{% endif %}
+
+{% if active %}
+<section class="card" aria-labelledby="active-h" data-dashboard-active>
+<div class="section-title">
+<h2 id="active-h">In progress <span class="muted small">({{ active|length }})</span></h2>
+<p class="small muted"><span class="js-only" data-refresh-note aria-live="polite">This page updates by itself while runs are in progress.</span><span class="no-js"><a href="{{ root }}/">Refresh</a> to see the latest status.</span></p>
+</div>
+<ul class="active-list">
+{% for r in active %}
+<li class="active-item {{ r.status|status_class }}" data-run-id="{{ r.run_id or '' }}" data-status="{{ r.status|status_key }}">
+{{ ui.status_chip(r.status) }}
+<span class="grow"><a class="name" href="{{ root }}/runs/{{ (r.run_id or '')|urlencode }}">{{ r|run_name }}</a>{% set ml = r|model_line %}{% if ml %}<span class="run-sub">{{ ml }}</span>{% endif %}</span>
+<span class="small muted nowrap">{% if r.status|status_key == "queued" %}Queued {% else %}Started {% endif %}{{ ui.time(r.created_at) }}</span>
+<a class="btn small" href="{{ root }}/runs/{{ (r.run_id or '')|urlencode }}"><span>{% if r.status|status_key == "queued" %}View{% else %}Watch progress{% endif %}</span>{{ ui.icon("i-arrow") }}</a>
+</li>
+{% endfor %}
+</ul>
+</section>
+{% endif %}
+
+{% if runs %}
+<form class="card card-flush" method="get" action="{{ root }}/compare" data-compare-form>
+<div class="toolbar">
+<h2 id="runs-h">{% if limited %}Newest runs <span class="muted small">({{ runs|length }} of {{ total_runs }})</span>{% else %}All runs <span class="muted small">({{ runs|length }})</span>{% endif %}</h2>
+<div class="btn-row">
+<span class="hint" data-compare-hint aria-live="polite">Tick 2–6 runs that have a verdict to compare them.</span>
+<button class="btn" type="submit" data-compare-submit>{{ ui.icon("i-columns") }}<span>Compare selected</span></button>
+</div>
+</div>
+<div class="table-wrap">
+<table class="runs stack-sm" aria-labelledby="runs-h">
+<thead><tr>
+<th scope="col"><span class="visually-hidden">Select to compare</span></th>
+<th scope="col">Verdict &amp; score</th>
+<th scope="col">Run</th>
+<th scope="col">Model and corpus</th>
+<th scope="col">Tests</th>
+<th scope="col">Started</th>
+</tr></thead>
+<tbody>
+{% for r in runs %}
+{% set rid = r.run_id or "" %}
+{% set has_verdict = r.verdict|is_verdict %}
+{% set st = r.status|status_key %}
+<tr data-run-id="{{ rid }}" data-status="{{ st }}">
+<td><input class="check" type="checkbox" name="ids" value="{{ rid }}" aria-label="Compare {{ r|run_name }}"{% if not has_verdict or not rid %} disabled title="No report to compare yet"{% endif %}></td>
+<td class="cell-verdict" data-label="Verdict">
+{% if has_verdict %}
+{{ ui.verdict_chip(r.verdict) }}
+{{ ui.score_inline(r.score) }}
+{{ ui.scorebar(r.score, r.verdict) }}
+{% else %}
+{{ ui.status_chip(r.status) }}
+{% if st == "failed" %}<span class="small muted cell-note">{% if r.exit_code is number %}exit code {{ r.exit_code }} · {% endif %}no verdict</span>
+{% elif st in ("queued", "running") %}<span class="small muted cell-note">verdict pending</span>{% endif %}
+{% endif %}
+</td>
+<td data-label="Run">
+<a class="run-name" href="{{ root }}/runs/{{ rid|urlencode }}">{{ r|run_name }}</a>
+<div class="run-sub"><code class="wrap-any">{{ rid or "—" }}</code>{% if r.source == "cli" %}<span class="badge src-cli" title="Written by malvalid run on the command line">CLI</span>{% endif %}</div>
+</td>
+<td data-label="Model and corpus" class="cell-model">
+{% set ml = r|model_line %}{% if ml %}<span class="small">{{ ml }}</span>{% else %}<span class="muted">—</span>{% endif %}
+{% if r.class_name or r.corpus %}<div class="run-sub">{% if r.class_name %}<code class="wrap-any">{{ r.class_name }}</code>{% endif %}{% if r.corpus %}<span class="wrap-any">on {{ r.corpus }}</span>{% if r.corpus|synthetic_corpus %} <span class="badge tone-warning" title="Synthetic corpus: the score is a pipeline check, not evidence about real-world performance">Synthetic data</span>{% endif %}{% endif %}</div>{% endif %}
+</td>
+<td data-label="Tests">{{ ui.counts(r) }}</td>
+<td data-label="Started"><span class="small nowrap">{{ ui.time(r.created_at) }}</span>{% if r.duration_s is number %}<div class="run-sub">{{ "running for" if r.status == "running" else "took" }} {{ r.duration_s|fmt_duration }}</div>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% if limited %}<p class="small" data-show-all>Showing the newest {{ runs|length }} of {{ total_runs }} runs. <a href="{{ root }}/?all=1">Show all {{ total_runs }}</a> (slower with many runs).</p>{% endif %}
+<p class="small muted legend-line">Tests: {{ ui.icon("i-pass") }} passed · {{ ui.icon("i-warn") }} warned · {{ ui.icon("i-fail") }} failed · {{ ui.icon("i-error") }} errored · {{ ui.icon("i-skip") }} skipped (lowers coverage). Scores are 0–100; a blocked run is capped at 49.</p>
+</form>
+{% elif not active %}
+<section class="empty" aria-labelledby="empty-h">
+<h2 id="empty-h">No runs yet</h2>
+<p class="lede">MalValid checks one trained malware detector against a production-readiness bar. Each run ends in a verdict (Ready, Conditional, Not ready or Blocked) backed by a 0–100 score and a per-test scorecard.</p>
+<ol>
+<li><strong>Have your model file ready</strong>: a LightGBM <code>.txt</code>, XGBoost <code>.json</code> / <code>.ubj</code> or ONNX model trained on EMBER v2 or v3 features. MalValid reads its kind and feature version from the file; no code needed. Adding the training hash list and training cutoff unlocks more tests; <a href="{{ root }}/modules">see what each test needs</a>.</li>
+<li><strong>Start a run</strong>: upload the model file, then enter the threshold you ship or let MalValid calibrate one on held-out data. A custom model (your own feature code) can still be submitted through a small Python adapter under “Advanced: own adapter”.</li>
+<li><strong>Read the verdict</strong>: runs appear here and update live while they run.</li>
+</ol>
+<div class="btn-row">
+<a class="btn primary" href="{{ root }}/runs/new">{{ ui.icon("i-plus") }}<span>Start your first run</span></a>
+<a class="btn" href="{{ root }}/corpora">{{ ui.icon("i-db") }}<span>Check the corpora</span></a>
+</div>
+{% if demo %}<p class="small">New to MalValid? Run the bundled demo detector on the synthetic corpus to see a full run and report. It checks the pipeline, not a real model.</p>
+{{ ui.demo_form(demo, csrf_token) }}{% endif %}
+{% if adapter_skeleton %}{{ ui.adapter_skeleton(adapter_skeleton, "skeleton-dash") }}{% endif %}
+<p class="small muted">Prefer the terminal? Inspect the model, then write a run into this folder and it shows up here too:</p>
+{{ ui.cmd("cli-inspect", "malvalid inspect-model my_model.txt") }}
+{{ ui.cmd("cli-run-model", "malvalid run --model my_model.txt --calibrate-fpr 0.005 --out " ~ ((rdir ~ "/my-first-run")|shell_quote)) }}
+<p class="small muted">With your own adapter (advanced):</p>
+{{ ui.cmd("cli-validate", "malvalid validate-adapter --adapter my_adapter.py") }}
+{{ ui.cmd("cli-run", "malvalid run --adapter my_adapter.py --out " ~ ((rdir ~ "/my-first-run")|shell_quote)) }}
+</section>
+{% endif %}
+{% endblock %}

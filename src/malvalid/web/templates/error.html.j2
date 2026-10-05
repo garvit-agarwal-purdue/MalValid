@@ -1,0 +1,29 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% set code = status if status is number else none %}
+{% set heading = title or ({400: "Bad request", 401: "Access token needed", 403: "Request refused", 404: "Not found", 405: "Method not allowed", 409: "Not possible right now", 413: "Upload too large", 500: "Something went wrong"}[code] if code in (400, 401, 403, 404, 405, 409, 413, 500) else "Something went wrong") %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<section class="error-box" aria-labelledby="err-h">
+{% if code %}<p class="error-code">{{ code }}</p>{% endif %}
+<h1 id="err-h">{{ heading }}</h1>
+{% if message %}<p class="lede wrap-any">{{ message }}</p>{% endif %}
+{% if code == 401 %}
+<div class="callout tone-info">{{ ui.icon("i-lock") }}<div>{% if not message %}<p>Open the link that <code>malvalid serve</code> printed in your terminal; it ends in <code>?token=…</code>.</p>{% endif %}<p>Lost the link? Stop the server (Ctrl+C in its terminal) and start <code>malvalid serve</code> again: each launch prints a new private link and the old one stops working (unless the server keeps its token in a <code>--token-file</code>).</p></div></div>
+{% elif code == 403 %}
+<p class="small">If you were submitting a form, the page may be stale or may have come from another site. Reload the page and try again.</p>
+{% elif code == 404 %}
+<p class="small">The run may have been deleted, or the link is mistyped. Every run in the runs folder is listed on the dashboard.</p>
+{% elif code == 413 %}
+<p class="small">Each uploaded file has a size limit (<code>--max-upload-mb</code>). {% if allow_path_mode %}For very large models, use “Use files on this machine” on the New run page instead of uploading.{% else %}For very large models, run <code>malvalid run --model</code> on the command line, or ask whoever started the server to raise the limit.{% endif %}</p>
+{% elif code and code >= 500 %}
+<p class="small">The terminal running <code>malvalid serve</code> shows the details. If a run was affected, its <code>console.log</code> and <code>run.log</code> may too.</p>
+{% endif %}
+{% if code != 401 %}
+<div class="btn-row">
+<a class="btn primary" href="{{ root }}/">{{ ui.icon("i-grid") }}<span>Go to the dashboard</span></a>
+<a class="btn" href="{{ root }}/runs/new">{{ ui.icon("i-plus") }}<span>New run</span></a>
+</div>
+{% endif %}
+</section>
+{% endblock %}

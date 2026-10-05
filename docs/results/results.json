@@ -1,0 +1,2233 @@
+{
+ "meta": {
+  "date": "2026-09-30",
+  "machine": "HPC cluster node (AMD EPYC 9654; 28-core allocation shared with other jobs, nproc reports 96; <=8 threads per run; 2 runs concurrent at most)",
+  "malvalid_version": "0.1.0a1",
+  "sandbox_backend": "bwrap (network isolated), all runs",
+  "corpora": {
+   "ember_v2_2018": {
+    "content_hash": "b76ea441be1a62197c7d19801174309e988eea54740ff22f03fa75e66beb4b98",
+    "rows": 1000000,
+    "features": 2381
+   },
+   "ember_v3_2024": {
+    "content_hash": "4f275e15e00ee11cdc67f176bbda932b3feaa92ec6d8584420cb04714e5110cc",
+    "rows": 484855,
+    "features": 2568
+   },
+   "synthetic_v2": {
+    "content_hash": "7a57a1f2ce89898e7b101bbd7478c6756d6666743ac629a35683326b506fe761",
+    "features": 2381,
+    "note": "synthetic, pipeline demo only"
+   }
+  }
+ },
+ "cross_model_summary": [
+  {
+   "run": "lightgbm_ember2018",
+   "verdict": "conditional",
+   "score": 80.5,
+   "coverage": 1.0,
+   "exit_code": 0,
+   "runtime_wall_s": 546.0,
+   "peak_rss_gb": 3.24,
+   "m1_fpr": 0.01,
+   "m1_detection_rate": 0.96498,
+   "m1_threshold": 0.8336,
+   "m2_aut_f1": 0.9771868468261201,
+   "m4_advantage": 0.17759999999999998,
+   "m4_upper_bound": true,
+   "m5_status": "pass",
+   "m5_flags": 0,
+   "m7_controllable_share": 0.39450512669969084,
+   "m7_attribution_source": "tree_shap",
+   "m7_rows_used": 531,
+   "m7_seconds": 464.093
+  },
+  {
+   "run": "xgboost_ember2018",
+   "verdict": "blocked",
+   "score": 49.0,
+   "coverage": 1.0,
+   "exit_code": 1,
+   "runtime_wall_s": 83.2,
+   "peak_rss_gb": 2.78,
+   "m1_fpr": 0.00891,
+   "m1_detection_rate": 0.92508,
+   "m1_threshold": 0.865389,
+   "m2_aut_f1": 0.9566332244464123,
+   "m4_advantage": 0.136,
+   "m4_upper_bound": true,
+   "m5_status": "pass",
+   "m5_flags": 0,
+   "m7_controllable_share": 0.3408622167151257,
+   "m7_attribution_source": "tree_shap",
+   "m7_rows_used": 2000,
+   "m7_seconds": 59.516
+  },
+  {
+   "run": "lightgbm_ember2024",
+   "verdict": "blocked",
+   "score": 49.0,
+   "coverage": 0.8667,
+   "exit_code": 1,
+   "runtime_wall_s": 172.7,
+   "peak_rss_gb": 5.41,
+   "m1_fpr": 0.012809027155637597,
+   "m1_detection_rate": 0.9752875,
+   "m1_threshold": 0.5,
+   "m2_aut_f1": 0.980166412284103,
+   "m5_status": "pass",
+   "m5_flags": 0,
+   "m7_controllable_share": 0.4469128268037895,
+   "m7_attribution_source": "tree_shap",
+   "m7_rows_used": 2000,
+   "m7_seconds": 118.336
+  },
+  {
+   "run": "synthetic_demo",
+   "verdict": "blocked",
+   "score": 45.2,
+   "coverage": 1.0,
+   "exit_code": 1,
+   "runtime_wall_s": 9.9,
+   "peak_rss_gb": 0.53,
+   "m1_fpr": 0.012094898433865716,
+   "m1_detection_rate": 0.6936216893903777,
+   "m1_threshold": 0.963108,
+   "m2_aut_f1": 0.8077815870609854,
+   "m4_advantage": 0.22770700636942676,
+   "m4_upper_bound": false,
+   "m5_status": "pass",
+   "m5_flags": 0,
+   "m7_controllable_share": 0.44661329211142686,
+   "m7_attribution_source": "tree_shap",
+   "m7_rows_used": 2000,
+   "m7_seconds": 2.54
+  },
+  {
+   "run": "lightgbm_ember2018_m6",
+   "verdict": "conditional",
+   "score": 80.3,
+   "coverage": 1.0,
+   "exit_code": 0,
+   "runtime_wall_s": 594.0,
+   "peak_rss_gb": 5.15,
+   "m1_fpr": 0.01,
+   "m1_detection_rate": 0.96498,
+   "m1_threshold": 0.8336,
+   "m2_aut_f1": 0.9771868468261201,
+   "m4_advantage": 0.17759999999999998,
+   "m4_upper_bound": true,
+   "m5_status": "pass",
+   "m5_flags": 0,
+   "m6_fidelity_10k": 0.9344,
+   "m7_controllable_share": 0.39450512669969084,
+   "m7_attribution_source": "tree_shap",
+   "m7_rows_used": 531,
+   "m7_seconds": 465.13
+  },
+  {
+   "run": "notrees_lightgbm_ember2018",
+   "verdict": "conditional",
+   "score": 77.7,
+   "coverage": 0.8667,
+   "exit_code": 0,
+   "runtime_wall_s": 255.1,
+   "peak_rss_gb": 5.61,
+   "m1_fpr": 0.01,
+   "m1_detection_rate": 0.96498,
+   "m1_threshold": 0.8336,
+   "m2_aut_f1": 0.9771868468261201,
+   "m4_advantage": 0.17759999999999998,
+   "m4_upper_bound": true,
+   "m5_status": "skipped",
+   "m5_flags": null,
+   "m7_controllable_share": 0.36990414430989604,
+   "m7_attribution_source": "permutation_shap",
+   "m7_rows_used": 52,
+   "m7_seconds": 205.001
+  },
+  {
+   "run": "notrees_m5_triggers",
+   "verdict": "conditional",
+   "score": 100.0,
+   "coverage": 1.0,
+   "exit_code": 0,
+   "runtime_wall_s": 8.6,
+   "peak_rss_gb": 0.83,
+   "m5_status": "pass",
+   "m5_flags": 0
+  }
+ ],
+ "runs": {
+  "lightgbm_ember2018": {
+   "run": "lightgbm_ember2018",
+   "command": "malvalid run --adapter examples/lightgbm_ember2018/adapter.py --out <build-dir>/release_realdata/runs/lightgbm_ember2018",
+   "exit_code": 0,
+   "verdict": "conditional",
+   "score": 80.5,
+   "raw_score": 80.5,
+   "capped": false,
+   "coverage": 1.0,
+   "reasons": [
+    "M4 Membership inference (training-data leakage): warn gate failed"
+   ],
+   "blockers": [],
+   "wall_s": 546.0,
+   "run_duration_s": 543.819,
+   "peak_rss_gb": 3.24,
+   "user_cpu_s": 474.44,
+   "corpus_content_hash": "b76ea441be1a62197c7d19801174309e988eea54740ff22f03fa75e66beb4b98",
+   "config_corpus": "ember_v2_2018",
+   "skipped": [],
+   "disabled": [
+    "extraction"
+   ],
+   "errored": [],
+   "warnings": [],
+   "model_sha256": [
+    "509de4a83e2d76b69fb3025ced0429e5f40f6a95ca40122b9eedd03317fff5e2"
+   ],
+   "tree_access": {
+    "available": true,
+    "n_trees": 1000,
+    "fidelity_max_abs_diff": 5.551115123125783e-17,
+    "n_rows_checked": 2000,
+    "rows_source": "corpus",
+    "tolerance": 0.0001,
+    "note": "verified: tree dump matches predict_proba (max |\u0394| = 5.6e-17 on 2000 corpus rows)",
+    "model_kind": "lightgbm"
+   },
+   "sandbox": {
+    "backend": "bwrap",
+    "startup_s": 3.349,
+    "load_s": 1.557,
+    "restarts": 0,
+    "timeouts": 0,
+    "crashes": 0,
+    "tree_access_note": "native_model via the lightgbm loader"
+   },
+   "max_seconds_per_module": 1800.0,
+   "modules": [
+    {
+     "code": "M0",
+     "id": "file_safety",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.138,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Scanned 1 artifact(s) (ember_model_2018.txt: LightGBM text model); no unsafe content found.",
+     "checks": [
+      {
+       "name": "critical_findings",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "findings_at_or_above_high",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "pickle_without_allow_pickle",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0001,
+     "key_metrics": {
+      "n_artifacts": 1,
+      "n_pickle": 0,
+      "n_critical": 0,
+      "n_high": 0,
+      "n_medium": 0,
+      "n_low": 0,
+      "n_policy_violations": 0,
+      "n_modelscan_scanned": 0,
+      "scanner": "modelscan",
+      "scanner_version": "0.8.8",
+      "allow_pickle": false,
+      "fail_on": "HIGH"
+     }
+    },
+    {
+     "code": "M1",
+     "id": "performance",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 75.0,
+     "duration_s": 18.504,
+     "skip_reason": null,
+     "error": null,
+     "finding": "At its declared operating threshold (0.8336) the model flags 1.00% of 100000 canonical benign samples (FPR; max 1.00%) and detects 96.5% of 100000 malicious samples (min 95.0%). Both hard-gate conditions hold.",
+     "checks": [
+      {
+       "name": "fpr",
+       "value": 0.01,
+       "op": "<=",
+       "threshold": 0.01,
+       "passed": true
+      },
+      {
+       "name": "detection_rate",
+       "value": 0.96498,
+       "op": ">=",
+       "threshold": 0.95,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0103,
+     "key_metrics": {
+      "detection_rate": 0.96498,
+      "fpr": 0.01,
+      "n_benign": 100000,
+      "n_malicious": 100000,
+      "threshold": 0.8336,
+      "auroc": 0.9964289467999999,
+      "auprc": 0.9969555993838837,
+      "brier": 0.018888216134787673,
+      "ece": 0.015305414310455524,
+      "tpr_at_fpr_0.001": 0.86935,
+      "tpr_at_fpr_0.01": 0.96498,
+      "threshold_at_max_fpr": 0.8340127344721416
+     }
+    },
+    {
+     "code": "M2",
+     "id": "drift",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 20.124,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Over 2 monthly windows after the training cutoff (2018-10-31), sample-weighted AUT(F1) is 0.977 (min 0.70; unweighted 0.977). F1 at the operating threshold drops by 0.009 from 0.982 (2018-11) to 0.973 (2018-12). Detection quality holds up on samples newer than the training data.",
+     "checks": [
+      {
+       "name": "aut_f1_weighted",
+       "value": 0.9771868468261201,
+       "op": ">=",
+       "threshold": 0.7,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0112,
+     "key_metrics": {
+      "n_windows": 2,
+      "first_window": "2018-11",
+      "last_window": "2018-12",
+      "f1_first": 0.9816832082627289,
+      "f1_last": 0.9726904853895113,
+      "f1_drop": 0.008992722873217618,
+      "aut_f1": 0.9771868468261201,
+      "aut_f1_weighted": 0.9771868468261201,
+      "effective_cutoff": "2018-10-31"
+     }
+    },
+    {
+     "code": "M4",
+     "id": "membership_inf",
+     "status": "warn",
+     "gate": "warn",
+     "gate_outcome": "failed",
+     "score": 45.9,
+     "duration_s": 3.413,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Worst-case membership advantage is 0.178 (ART black-box attack (random forest)) (upper bound: members and non-members come from different time periods), above the 0.10 limit: an attacker who can query the model can tell its training files from unseen files of the nearest time period well above chance (attack AUROC up to 0.615).",
+     "checks": [
+      {
+       "name": "membership_advantage",
+       "value": 0.17759999999999998,
+       "op": "<=",
+       "threshold": 0.1,
+       "passed": false
+      }
+     ],
+     "budget_fraction": 0.0019,
+     "key_metrics": {
+      "advantage": 0.17759999999999998,
+      "worst_attack": "art_rf",
+      "advantage_is_upper_bound": true,
+      "sampling_design": "nearest_time",
+      "time_matched": false,
+      "n_manifest_hashes": 600000,
+      "n_members_in_corpus": 600000,
+      "n_members_used": 5000,
+      "n_nonmembers_used": 5000,
+      "n_attack_train_pairs": 2500,
+      "n_attack_test_pairs": 2500,
+      "member_accuracy": 1.0,
+      "nonmember_accuracy": 0.979,
+      "accuracy_gap": 0.02100000000000002,
+      "max_auroc": 0.6146892,
+      "max_best_advantage": 0.18200000000000005,
+      "max_tpr_at_fpr_0.01": 0.0252,
+      "loss_threshold_advantage": 0.16759999999999997,
+      "loss_threshold_best_advantage": 0.17120000000000002,
+      "loss_threshold_auroc": 0.6146892,
+      "loss_threshold_tpr_at_fpr_0.01": 0.0252,
+      "art_rf_advantage": 0.17759999999999998,
+      "art_rf_best_advantage": 0.18200000000000005,
+      "art_rf_auroc": 0.60064408,
+      "art_rf_tpr_at_fpr_0.01": 0.0156,
+      "art_gb_advantage": 0.16920000000000002,
+      "art_gb_best_advantage": 0.1784,
+      "art_gb_auroc": 0.5980729600000001,
+      "art_gb_tpr_at_fpr_0.01": 0.0116
+     }
+    },
+    {
+     "code": "M5",
+     "id": "backdoor_screen",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 1.426,
+     "skip_reason": null,
+     "error": null,
+     "finding": "The static tree scan of 1000 trees (1479647 root\u2192leaf rules) found no backdoor-like rules (top suspicion 0.11 < 0.50). Screening only \u2014 absence of findings is not proof of a clean model.",
+     "checks": [
+      {
+       "name": "n_flagged_rules",
+       "value": 0.0,
+       "op": "<=",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0008,
+     "key_metrics": {
+      "n_triggers": 0,
+      "scan_ran": true,
+      "n_trees": 1000,
+      "n_trees_scanned": 1000,
+      "n_rules_scanned": 1479647,
+      "n_candidate_rules": 98073,
+      "n_flagged_rules": 0,
+      "n_flagged_features": 0,
+      "top_suspicion": 0.11155483655505756,
+      "top_feature_suspicion": 0.11159071759545873,
+      "top_suspicious_feature": "imports.functions_hashed[942]",
+      "scan_seconds": 1.417
+     }
+    },
+    {
+     "code": "M7",
+     "id": "explanation",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 82.5,
+     "duration_s": 464.093,
+     "skip_reason": null,
+     "error": null,
+     "finding": "39.5% of the model's attribution (mean |SHAP| (exact TreeSHAP), controllability-weighted) sits on attacker-controllable features (limit 50.0%). The largest single feature, section.num_rx (append_only), carries 4.9% (limit 30.0%). The top 20 features hold 33.2% of the attribution (14 of them attacker-controllable); effective number of features 101.9.",
+     "checks": [
+      {
+       "name": "controllable_share",
+       "value": 0.39450512669969084,
+       "op": "<=",
+       "threshold": 0.5,
+       "passed": true
+      },
+      {
+       "name": "top_feature_share",
+       "value": 0.04942277997775167,
+       "op": "<=",
+       "threshold": 0.3,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.2578,
+     "key_metrics": {
+      "attribution_source": "tree_shap",
+      "controllable_share": 0.39450512669969084,
+      "top_feature_share": 0.04942277997775167,
+      "top_feature": "section.num_rx",
+      "top_feature_controllability": "append_only",
+      "effective_n_features": 101.92457980973386,
+      "top_k": 20,
+      "top_k_share": 0.33216809402517844,
+      "top_k_attacker_controllable_share": 0.24367867344211558,
+      "n_top_k_attacker_controllable": 14,
+      "n_features_used": 2166,
+      "shap_samples_requested": 2000,
+      "shap_samples_used": 531,
+      "share_controllable": 0.12596761532248985,
+      "share_append_only": 0.35805001516960133,
+      "share_derived": 0.4251213862349684,
+      "share_fixed": 0.09086098327294044,
+      "gain_controllable_share": 0.3390737982646209,
+      "gain_top_feature_share": 0.10036951492157717,
+      "gain_top_feature": "header.coff.characteristics_hashed[0]"
+     }
+    }
+   ]
+  },
+  "xgboost_ember2018": {
+   "run": "xgboost_ember2018",
+   "command": "malvalid run --adapter examples/xgboost_ember2018/adapter.py --out <build-dir>/release_realdata/runs/xgboost_ember2018",
+   "exit_code": 1,
+   "verdict": "blocked",
+   "score": 49.0,
+   "raw_score": 78.1,
+   "capped": true,
+   "coverage": 1.0,
+   "reasons": [
+    "M1 Performance & calibration: hard gate failed"
+   ],
+   "blockers": [
+    "M1 Performance & calibration: hard gate failed"
+   ],
+   "wall_s": 83.2,
+   "run_duration_s": 81.169,
+   "peak_rss_gb": 2.78,
+   "user_cpu_s": 70.04,
+   "corpus_content_hash": "b76ea441be1a62197c7d19801174309e988eea54740ff22f03fa75e66beb4b98",
+   "config_corpus": "ember_v2_2018",
+   "skipped": [],
+   "disabled": [
+    "extraction"
+   ],
+   "errored": [],
+   "warnings": [],
+   "model_sha256": [
+    "64901aec8111cf940e488efea9098eaafba01ff7e41554d527458f00821583b6"
+   ],
+   "tree_access": {
+    "available": true,
+    "n_trees": 600,
+    "fidelity_max_abs_diff": 2.4962362477065625e-07,
+    "n_rows_checked": 2000,
+    "rows_source": "corpus",
+    "tolerance": 0.0001,
+    "note": "verified: tree dump matches predict_proba (max |\u0394| = 2.5e-07 on 2000 corpus rows)",
+    "model_kind": "xgboost"
+   },
+   "sandbox": {
+    "backend": "bwrap",
+    "startup_s": 2.399,
+    "load_s": 0.444,
+    "restarts": 0,
+    "timeouts": 0,
+    "crashes": 0,
+    "tree_access_note": "native_model via the xgboost loader"
+   },
+   "max_seconds_per_module": 1800.0,
+   "modules": [
+    {
+     "code": "M0",
+     "id": "file_safety",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.03,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Scanned 1 artifact(s) (model.json: JSON model (XGBoost save_model / LightGBM dump_model)); no unsafe content found.",
+     "checks": [
+      {
+       "name": "critical_findings",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "findings_at_or_above_high",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "pickle_without_allow_pickle",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0,
+     "key_metrics": {
+      "n_artifacts": 1,
+      "n_pickle": 0,
+      "n_critical": 0,
+      "n_high": 0,
+      "n_medium": 0,
+      "n_low": 0,
+      "n_policy_violations": 0,
+      "n_modelscan_scanned": 0,
+      "scanner": "modelscan",
+      "scanner_version": "0.8.8",
+      "allow_pickle": false,
+      "fail_on": "HIGH"
+     }
+    },
+    {
+     "code": "M1",
+     "id": "performance",
+     "status": "fail",
+     "gate": "hard",
+     "gate_outcome": "failed",
+     "score": 62.5,
+     "duration_s": 6.314,
+     "skip_reason": null,
+     "error": null,
+     "finding": "At its declared operating threshold (0.8654) the model flags 0.89% of 100000 canonical benign samples (FPR; max 1.00%) and detects 92.5% of 100000 malicious samples (min 95.0%). The detection rate is below the minimum.",
+     "checks": [
+      {
+       "name": "fpr",
+       "value": 0.00891,
+       "op": "<=",
+       "threshold": 0.01,
+       "passed": true
+      },
+      {
+       "name": "detection_rate",
+       "value": 0.92508,
+       "op": ">=",
+       "threshold": 0.95,
+       "passed": false
+      }
+     ],
+     "budget_fraction": 0.0035,
+     "key_metrics": {
+      "detection_rate": 0.92508,
+      "fpr": 0.00891,
+      "n_benign": 100000,
+      "n_malicious": 100000,
+      "threshold": 0.865389,
+      "auroc": 0.9930608144,
+      "auprc": 0.9937667544238258,
+      "brier": 0.02625595381405146,
+      "ece": 0.008910804066970719,
+      "tpr_at_fpr_0.001": 0.64763,
+      "tpr_at_fpr_0.01": 0.92965,
+      "threshold_at_max_fpr": 0.8419319987297058
+     }
+    },
+    {
+     "code": "M2",
+     "id": "drift",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 5.83,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Over 2 monthly windows after the training cutoff (2018-10-31), sample-weighted AUT(F1) is 0.957 (min 0.70; unweighted 0.957). F1 at the operating threshold drops by 0.009 from 0.961 (2018-11) to 0.952 (2018-12). Detection quality holds up on samples newer than the training data.",
+     "checks": [
+      {
+       "name": "aut_f1_weighted",
+       "value": 0.9566332244464123,
+       "op": ">=",
+       "threshold": 0.7,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0032,
+     "key_metrics": {
+      "n_windows": 2,
+      "first_window": "2018-11",
+      "last_window": "2018-12",
+      "f1_first": 0.9611140845650294,
+      "f1_last": 0.9521523643277953,
+      "f1_drop": 0.008961720237234183,
+      "aut_f1": 0.9566332244464124,
+      "aut_f1_weighted": 0.9566332244464123,
+      "effective_cutoff": "2018-10-31"
+     }
+    },
+    {
+     "code": "M4",
+     "id": "membership_inf",
+     "status": "warn",
+     "gate": "warn",
+     "gate_outcome": "failed",
+     "score": 61.5,
+     "duration_s": 2.635,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Worst-case membership advantage is 0.136 (ART black-box attack (gradient boosting)) (upper bound: members and non-members come from different time periods), above the 0.10 limit: an attacker who can query the model can tell its training files from unseen files of the nearest time period well above chance (attack AUROC up to 0.591).",
+     "checks": [
+      {
+       "name": "membership_advantage",
+       "value": 0.136,
+       "op": "<=",
+       "threshold": 0.1,
+       "passed": false
+      }
+     ],
+     "budget_fraction": 0.0015,
+     "key_metrics": {
+      "advantage": 0.136,
+      "worst_attack": "art_gb",
+      "advantage_is_upper_bound": true,
+      "sampling_design": "nearest_time",
+      "time_matched": false,
+      "n_manifest_hashes": 600000,
+      "n_members_in_corpus": 600000,
+      "n_members_used": 5000,
+      "n_nonmembers_used": 5000,
+      "n_attack_train_pairs": 2500,
+      "n_attack_test_pairs": 2500,
+      "member_accuracy": 0.9452,
+      "nonmember_accuracy": 0.9606,
+      "accuracy_gap": -0.01539999999999997,
+      "max_auroc": 0.5909028000000001,
+      "max_best_advantage": 0.1436,
+      "max_tpr_at_fpr_0.01": 0.0316,
+      "loss_threshold_advantage": 0.07199999999999995,
+      "loss_threshold_best_advantage": 0.07520000000000004,
+      "loss_threshold_auroc": 0.53244672,
+      "loss_threshold_tpr_at_fpr_0.01": 0.0252,
+      "art_rf_advantage": 0.10359999999999997,
+      "art_rf_best_advantage": 0.11519999999999997,
+      "art_rf_auroc": 0.57166144,
+      "art_rf_tpr_at_fpr_0.01": 0.0,
+      "art_gb_advantage": 0.136,
+      "art_gb_best_advantage": 0.1436,
+      "art_gb_auroc": 0.5909028000000001,
+      "art_gb_tpr_at_fpr_0.01": 0.0316
+     }
+    },
+    {
+     "code": "M5",
+     "id": "backdoor_screen",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.357,
+     "skip_reason": null,
+     "error": null,
+     "finding": "The static tree scan of 600 trees (103554 root\u2192leaf rules) found no backdoor-like rules (top suspicion 0.11 < 0.50). Screening only \u2014 absence of findings is not proof of a clean model.",
+     "checks": [
+      {
+       "name": "n_flagged_rules",
+       "value": 0.0,
+       "op": "<=",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0002,
+     "key_metrics": {
+      "n_triggers": 0,
+      "scan_ran": true,
+      "n_trees": 600,
+      "n_trees_scanned": 600,
+      "n_rules_scanned": 103554,
+      "n_candidate_rules": 6042,
+      "n_flagged_rules": 0,
+      "n_flagged_features": 0,
+      "top_suspicion": 0.1074004884212326,
+      "top_feature_suspicion": 0.10896338722770933,
+      "top_suspicious_feature": "header.optional.major_subsystem_version",
+      "scan_seconds": 0.35
+     }
+    },
+    {
+     "code": "M7",
+     "id": "explanation",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 86.4,
+     "duration_s": 59.516,
+     "skip_reason": null,
+     "error": null,
+     "finding": "34.1% of the model's attribution (mean |SHAP| (exact TreeSHAP), controllability-weighted) sits on attacker-controllable features (limit 50.0%). The largest single feature, section.num_rx (append_only), carries 2.3% (limit 30.0%). The top 20 features hold 22.2% of the attribution (12 of them attacker-controllable); effective number of features 227.7.",
+     "checks": [
+      {
+       "name": "controllable_share",
+       "value": 0.3408622167151257,
+       "op": "<=",
+       "threshold": 0.5,
+       "passed": true
+      },
+      {
+       "name": "top_feature_share",
+       "value": 0.023394849954744865,
+       "op": "<=",
+       "threshold": 0.3,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0331,
+     "key_metrics": {
+      "attribution_source": "tree_shap",
+      "controllable_share": 0.3408622167151257,
+      "top_feature_share": 0.023394849954744865,
+      "top_feature": "section.num_rx",
+      "top_feature_controllability": "append_only",
+      "effective_n_features": 227.71214237071163,
+      "top_k": 20,
+      "top_k_share": 0.22174831747498538,
+      "top_k_attacker_controllable_share": 0.1496552441516479,
+      "n_top_k_attacker_controllable": 12,
+      "n_features_used": 1832,
+      "shap_samples_requested": 2000,
+      "shap_samples_used": 2000,
+      "share_controllable": 0.10369965167290068,
+      "share_append_only": 0.3162167533896334,
+      "share_derived": 0.5170457244122941,
+      "share_fixed": 0.06303787052517172,
+      "gain_controllable_share": 0.3586427390323159,
+      "gain_top_feature_share": 0.061048736797243354,
+      "gain_top_feature": "header.coff.characteristics_hashed[0]"
+     }
+    }
+   ]
+  },
+  "lightgbm_ember2024": {
+   "run": "lightgbm_ember2024",
+   "command": "malvalid run --adapter examples/lightgbm_ember2024/adapter.py --out <build-dir>/release_realdata/runs/lightgbm_ember2024 --corpus ember_v3_2024",
+   "exit_code": 1,
+   "verdict": "blocked",
+   "score": 49.0,
+   "raw_score": 79.9,
+   "capped": true,
+   "coverage": 0.8667,
+   "reasons": [
+    "M1 Performance & calibration: hard gate failed",
+    "M4 Membership inference (training-data leakage) was skipped (lowers coverage)"
+   ],
+   "blockers": [
+    "M1 Performance & calibration: hard gate failed"
+   ],
+   "wall_s": 172.7,
+   "run_duration_s": 171.71,
+   "peak_rss_gb": 5.41,
+   "user_cpu_s": 127.11,
+   "corpus_content_hash": "4f275e15e00ee11cdc67f176bbda932b3feaa92ec6d8584420cb04714e5110cc",
+   "config_corpus": "ember_v3_2024",
+   "skipped": [
+    "membership_inf"
+   ],
+   "disabled": [
+    "extraction"
+   ],
+   "errored": [],
+   "warnings": [],
+   "model_sha256": [
+    "4252027863492ac138785c8c18576f43dad77d00faddc14e8c0072e8db419f99"
+   ],
+   "tree_access": {
+    "available": true,
+    "n_trees": 500,
+    "fidelity_max_abs_diff": 1.1102230246251565e-16,
+    "n_rows_checked": 2000,
+    "rows_source": "corpus",
+    "tolerance": 0.0001,
+    "note": "verified: tree dump matches predict_proba (max |\u0394| = 1.1e-16 on 2000 corpus rows)",
+    "model_kind": "lightgbm"
+   },
+   "sandbox": {
+    "backend": "bwrap",
+    "startup_s": 1.495,
+    "load_s": 0.064,
+    "restarts": 0,
+    "timeouts": 0,
+    "crashes": 0,
+    "tree_access_note": "native_model via the lightgbm loader"
+   },
+   "max_seconds_per_module": 1800.0,
+   "modules": [
+    {
+     "code": "M0",
+     "id": "file_safety",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.02,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Scanned 1 artifact(s) (EMBER2024_PE.model: LightGBM text model); no unsafe content found.",
+     "checks": [
+      {
+       "name": "critical_findings",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "findings_at_or_above_high",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "pickle_without_allow_pickle",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0,
+     "key_metrics": {
+      "n_artifacts": 1,
+      "n_pickle": 0,
+      "n_critical": 0,
+      "n_high": 0,
+      "n_medium": 0,
+      "n_low": 0,
+      "n_policy_violations": 0,
+      "n_modelscan_scanned": 0,
+      "scanner": "modelscan",
+      "scanner_version": "0.8.8",
+      "allow_pickle": false,
+      "fail_on": "HIGH"
+     }
+    },
+    {
+     "code": "M1",
+     "id": "performance",
+     "status": "fail",
+     "gate": "hard",
+     "gate_outcome": "failed",
+     "score": 63.5,
+     "duration_s": 30.411,
+     "skip_reason": null,
+     "error": null,
+     "finding": "At its declared operating threshold (0.5) the model flags 1.28% of 239987 canonical benign samples (FPR; max 1.00%) and detects 97.5% of 240000 malicious samples (min 95.0%). The false-positive rate exceeds the maximum: this detector would raise too many false alarms for production. On the same data a threshold of 0.58 would meet max_fpr (FPR 1.00%) at a detection rate of 97.1%.",
+     "checks": [
+      {
+       "name": "fpr",
+       "value": 0.012809027155637597,
+       "op": "<=",
+       "threshold": 0.01,
+       "passed": false
+      },
+      {
+       "name": "detection_rate",
+       "value": 0.9752875,
+       "op": ">=",
+       "threshold": 0.95,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0169,
+     "key_metrics": {
+      "detection_rate": 0.9752875,
+      "fpr": 0.012809027155637597,
+      "n_benign": 239987,
+      "n_malicious": 240000,
+      "threshold": 0.5,
+      "auroc": 0.9983209027902207,
+      "auprc": 0.9984530365830808,
+      "brier": 0.014196082098813635,
+      "ece": 0.00588158689776068,
+      "tpr_at_fpr_0.001": 0.9012583333333334,
+      "tpr_at_fpr_0.01": 0.97065,
+      "threshold_at_max_fpr": 0.5799952884115703,
+      "challenge_detection_rate": 0.7064502875924404
+     }
+    },
+    {
+     "code": "M2",
+     "id": "drift",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 12.433,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Over 3 monthly windows after the training cutoff (2024-09-21), sample-weighted AUT(F1) is 0.980 (min 0.70; unweighted 0.980). F1 at the operating threshold drops by 0.005 from 0.983 (2024-09-22..2024-10-21) to 0.977 (2024-11-22..2024-12-21). Detection quality holds up on samples newer than the training data.",
+     "checks": [
+      {
+       "name": "aut_f1_weighted",
+       "value": 0.980166412284103,
+       "op": ">=",
+       "threshold": 0.7,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0069,
+     "key_metrics": {
+      "n_windows": 3,
+      "first_window": "2024-09-22..2024-10-21",
+      "last_window": "2024-11-22..2024-12-21",
+      "f1_first": 0.9827974304873963,
+      "f1_last": 0.9773821349430732,
+      "f1_drop": 0.005415295544323073,
+      "aut_f1": 0.980011087330529,
+      "aut_f1_weighted": 0.980166412284103,
+      "effective_cutoff": "2024-09-21"
+     }
+    },
+    {
+     "code": "M4",
+     "id": "membership_inf",
+     "status": "skipped",
+     "gate": "warn",
+     "gate_outcome": "not_evaluated",
+     "score": null,
+     "duration_s": null,
+     "skip_reason": "no training manifest (training_hashes_path not declared)",
+     "error": null,
+     "finding": "Not run \u2014 no training manifest (training_hashes_path not declared)",
+     "checks": [],
+     "budget_fraction": null,
+     "key_metrics": {}
+    },
+    {
+     "code": "M5",
+     "id": "backdoor_screen",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.407,
+     "skip_reason": null,
+     "error": null,
+     "finding": "The static tree scan of 500 trees (72423 root\u2192leaf rules) found no backdoor-like rules (top suspicion 0.04 < 0.50). Screening only \u2014 absence of findings is not proof of a clean model.",
+     "checks": [
+      {
+       "name": "n_flagged_rules",
+       "value": 0.0,
+       "op": "<=",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0002,
+     "key_metrics": {
+      "n_triggers": 0,
+      "scan_ran": true,
+      "n_trees": 500,
+      "n_trees_scanned": 500,
+      "n_rules_scanned": 72423,
+      "n_candidate_rules": 1835,
+      "n_flagged_rules": 0,
+      "n_flagged_features": 0,
+      "top_suspicion": 0.041204070172002345,
+      "top_feature_suspicion": 0.049368557412173115,
+      "top_suspicious_feature": "datadirectories.SECURITY.virtual_address",
+      "scan_seconds": 0.401
+     }
+    },
+    {
+     "code": "M7",
+     "id": "explanation",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 78.8,
+     "duration_s": 118.336,
+     "skip_reason": null,
+     "error": null,
+     "finding": "44.7% of the model's attribution (mean |SHAP| (exact TreeSHAP), controllability-weighted) sits on attacker-controllable features (limit 50.0%). The largest single feature, header.coff.characteristics.DLL (fixed), carries 7.1% (limit 30.0%). The top 20 features hold 33.2% of the attribution (12 of them attacker-controllable); effective number of features 86.8.",
+     "checks": [
+      {
+       "name": "controllable_share",
+       "value": 0.4469128268037895,
+       "op": "<=",
+       "threshold": 0.5,
+       "passed": true
+      },
+      {
+       "name": "top_feature_share",
+       "value": 0.0710607725531647,
+       "op": "<=",
+       "threshold": 0.3,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0657,
+     "key_metrics": {
+      "attribution_source": "tree_shap",
+      "controllable_share": 0.4469128268037895,
+      "top_feature_share": 0.0710607725531647,
+      "top_feature": "header.coff.characteristics.DLL",
+      "top_feature_controllability": "fixed",
+      "effective_n_features": 86.79047494094729,
+      "top_k": 20,
+      "top_k_share": 0.3322265959001603,
+      "top_k_attacker_controllable_share": 0.15510342946260058,
+      "n_top_k_attacker_controllable": 12,
+      "n_features_used": 2106,
+      "shap_samples_requested": 2000,
+      "shap_samples_used": 2000,
+      "share_controllable": 0.2301167164224402,
+      "share_append_only": 0.2890614805084658,
+      "share_derived": 0.3687593221800308,
+      "share_fixed": 0.11206248088906305,
+      "gain_controllable_share": 0.3964935783468403,
+      "gain_top_feature_share": 0.3041038058124921,
+      "gain_top_feature": "header.coff.characteristics.DLL"
+     }
+    }
+   ]
+  },
+  "synthetic_demo": {
+   "run": "synthetic_demo",
+   "command": "malvalid run --adapter examples/synthetic_demo/adapter.py --config examples/synthetic_demo/gate.yaml --out <build-dir>/release_realdata/runs/synthetic_demo",
+   "exit_code": 1,
+   "verdict": "blocked",
+   "score": 45.2,
+   "raw_score": 45.2,
+   "capped": false,
+   "coverage": 1.0,
+   "reasons": [
+    "M1 Performance & calibration: hard gate failed"
+   ],
+   "blockers": [
+    "M1 Performance & calibration: hard gate failed"
+   ],
+   "wall_s": 9.9,
+   "run_duration_s": 8.751,
+   "peak_rss_gb": 0.53,
+   "user_cpu_s": 7.11,
+   "corpus_content_hash": "7a57a1f2ce89898e7b101bbd7478c6756d6666743ac629a35683326b506fe761",
+   "config_corpus": "synthetic_v2",
+   "skipped": [],
+   "disabled": [
+    "extraction"
+   ],
+   "errored": [],
+   "warnings": [],
+   "model_sha256": [
+    "33153fc398ac646e97e0ba425b532e794711b064bdabdd43965024e061b74974"
+   ],
+   "tree_access": {
+    "available": true,
+    "n_trees": 200,
+    "fidelity_max_abs_diff": 2.220446049250313e-16,
+    "n_rows_checked": 2000,
+    "rows_source": "corpus",
+    "tolerance": 0.0001,
+    "note": "verified: tree dump matches predict_proba (max |\u0394| = 2.2e-16 on 2000 corpus rows)",
+    "model_kind": "lightgbm"
+   },
+   "sandbox": {
+    "backend": "bwrap",
+    "startup_s": 1.712,
+    "load_s": 0.026,
+    "restarts": 0,
+    "timeouts": 0,
+    "crashes": 0,
+    "tree_access_note": "native_model via the lightgbm loader"
+   },
+   "max_seconds_per_module": 1800.0,
+   "modules": [
+    {
+     "code": "M0",
+     "id": "file_safety",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.02,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Scanned 1 artifact(s) (model.txt: LightGBM text model); no unsafe content found.",
+     "checks": [
+      {
+       "name": "critical_findings",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "findings_at_or_above_high",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "pickle_without_allow_pickle",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0,
+     "key_metrics": {
+      "n_artifacts": 1,
+      "n_pickle": 0,
+      "n_critical": 0,
+      "n_high": 0,
+      "n_medium": 0,
+      "n_low": 0,
+      "n_policy_violations": 0,
+      "n_modelscan_scanned": 0,
+      "scanner": "modelscan",
+      "scanner_version": "0.8.8",
+      "allow_pickle": false,
+      "fail_on": "HIGH"
+     }
+    },
+    {
+     "code": "M1",
+     "id": "performance",
+     "status": "fail",
+     "gate": "hard",
+     "gate_outcome": "failed",
+     "score": 0.0,
+     "duration_s": 0.422,
+     "skip_reason": null,
+     "error": null,
+     "finding": "At its declared operating threshold (0.9631) the model flags 1.21% of 6449 canonical benign samples (FPR; max 1.00%) and detects 69.4% of 6381 malicious samples (min 95.0%). Both conditions fail: the false-positive rate is too high to ship and detection is below the minimum. On the same data a threshold of 0.9741 would meet max_fpr (FPR 0.99%) at a detection rate of 66.2%.",
+     "checks": [
+      {
+       "name": "fpr",
+       "value": 0.012094898433865716,
+       "op": "<=",
+       "threshold": 0.01,
+       "passed": false
+      },
+      {
+       "name": "detection_rate",
+       "value": 0.6936216893903777,
+       "op": ">=",
+       "threshold": 0.95,
+       "passed": false
+      }
+     ],
+     "budget_fraction": 0.0002,
+     "key_metrics": {
+      "detection_rate": 0.6936216893903777,
+      "fpr": 0.012094898433865716,
+      "n_benign": 6449,
+      "n_malicious": 6381,
+      "threshold": 0.963108,
+      "auroc": 0.9784015574419221,
+      "auprc": 0.977967990307022,
+      "brier": 0.06603992363498731,
+      "ece": 0.05693803224872199,
+      "tpr_at_fpr_0.001": 0.3469675599435825,
+      "tpr_at_fpr_0.01": 0.6624353549600376,
+      "threshold_at_max_fpr": 0.9741069482821461,
+      "challenge_detection_rate": 0.11
+     }
+    },
+    {
+     "code": "M2",
+     "id": "drift",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 88.5,
+     "duration_s": 0.331,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Over 24 monthly windows after the training cutoff (2017-12-28), sample-weighted AUT(F1) is 0.808 (min 0.70; unweighted 0.808). F1 at the operating threshold drops by 0.228 from 0.940 (2017-12-29..2018-01-28) to 0.712 (2019-11-28..2019-12-27). AUT meets the drift policy, but F1 still fell by 0.228 over the evaluated period: budget for periodic retraining.",
+     "checks": [
+      {
+       "name": "aut_f1_weighted",
+       "value": 0.8077815870609854,
+       "op": ">=",
+       "threshold": 0.7,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0002,
+     "key_metrics": {
+      "n_windows": 24,
+      "first_window": "2017-12-29..2018-01-28",
+      "last_window": "2019-11-28..2019-12-27",
+      "f1_first": 0.9399141630901288,
+      "f1_last": 0.711943793911007,
+      "f1_drop": 0.22797036917912172,
+      "aut_f1": 0.8082097903390391,
+      "aut_f1_weighted": 0.8077815870609854,
+      "effective_cutoff": "2017-12-28"
+     }
+    },
+    {
+     "code": "M4",
+     "id": "membership_inf",
+     "status": "warn",
+     "gate": "warn",
+     "gate_outcome": "failed",
+     "score": 27.1,
+     "duration_s": 1.162,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Worst-case membership advantage is 0.228 (loss-threshold attack), above the 0.10 limit: an attacker who can query the model can tell its training files from comparable unseen files well above chance (attack AUROC up to 0.642).",
+     "checks": [
+      {
+       "name": "membership_advantage",
+       "value": 0.22770700636942676,
+       "op": "<=",
+       "threshold": 0.1,
+       "passed": false
+      }
+     ],
+     "budget_fraction": 0.0006,
+     "key_metrics": {
+      "advantage": 0.22770700636942676,
+      "worst_attack": "loss_threshold",
+      "advantage_is_upper_bound": false,
+      "sampling_design": "time_matched",
+      "time_matched": true,
+      "n_manifest_hashes": 5315,
+      "n_members_in_corpus": 5315,
+      "n_members_used": 1255,
+      "n_nonmembers_used": 1255,
+      "n_attack_train_pairs": 627,
+      "n_attack_test_pairs": 628,
+      "member_accuracy": 1.0,
+      "nonmember_accuracy": 0.9410358565737051,
+      "accuracy_gap": 0.05896414342629486,
+      "max_auroc": 0.641779331818735,
+      "max_best_advantage": 0.24681528662420382,
+      "max_tpr_at_fpr_0.01": 0.020700636942675158,
+      "loss_threshold_advantage": 0.22770700636942676,
+      "loss_threshold_best_advantage": 0.24681528662420382,
+      "loss_threshold_auroc": 0.5857210231652401,
+      "loss_threshold_tpr_at_fpr_0.01": 0.009554140127388535,
+      "art_rf_advantage": 0.11146496815286622,
+      "art_rf_best_advantage": 0.21019108280254784,
+      "art_rf_auroc": 0.6099448760598808,
+      "art_rf_tpr_at_fpr_0.01": 0.0,
+      "art_gb_advantage": 0.18789808917197448,
+      "art_gb_best_advantage": 0.22292993630573243,
+      "art_gb_auroc": 0.641779331818735,
+      "art_gb_tpr_at_fpr_0.01": 0.020700636942675158
+     }
+    },
+    {
+     "code": "M5",
+     "id": "backdoor_screen",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.106,
+     "skip_reason": null,
+     "error": null,
+     "finding": "The static tree scan of 200 trees (6200 root\u2192leaf rules) found no backdoor-like rules (top suspicion 0.33 < 0.50). Screening only \u2014 absence of findings is not proof of a clean model.",
+     "checks": [
+      {
+       "name": "n_flagged_rules",
+       "value": 0.0,
+       "op": "<=",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0001,
+     "key_metrics": {
+      "n_triggers": 0,
+      "scan_ran": true,
+      "n_trees": 200,
+      "n_trees_scanned": 200,
+      "n_rules_scanned": 6200,
+      "n_candidate_rules": 71,
+      "n_flagged_rules": 0,
+      "n_flagged_features": 0,
+      "top_suspicion": 0.33052560284592997,
+      "top_feature_suspicion": 0.4011616616315769,
+      "top_suspicious_feature": "section.entry_name_hashed[17]",
+      "scan_seconds": 0.101
+     }
+    },
+    {
+     "code": "M7",
+     "id": "explanation",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 78.8,
+     "duration_s": 2.54,
+     "skip_reason": null,
+     "error": null,
+     "finding": "44.7% of the model's attribution (mean |SHAP| (exact TreeSHAP), controllability-weighted) sits on attacker-controllable features (limit 50.0%). The largest single feature, section.entry_name_hashed[39] (controllable), carries 4.9% (limit 30.0%). The top 20 features hold 36.8% of the attribution (10 of them attacker-controllable); effective number of features 90.9.",
+     "checks": [
+      {
+       "name": "controllable_share",
+       "value": 0.44661329211142686,
+       "op": "<=",
+       "threshold": 0.5,
+       "passed": true
+      },
+      {
+       "name": "top_feature_share",
+       "value": 0.048897586240424847,
+       "op": "<=",
+       "threshold": 0.3,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0014,
+     "key_metrics": {
+      "attribution_source": "tree_shap",
+      "controllable_share": 0.44661329211142686,
+      "top_feature_share": 0.048897586240424847,
+      "top_feature": "section.entry_name_hashed[39]",
+      "top_feature_controllability": "controllable",
+      "effective_n_features": 90.89707730966751,
+      "top_k": 20,
+      "top_k_share": 0.36819682843642904,
+      "top_k_attacker_controllable_share": 0.23698138274980649,
+      "n_top_k_attacker_controllable": 10,
+      "n_features_used": 869,
+      "shap_samples_requested": 2000,
+      "shap_samples_used": 2000,
+      "share_controllable": 0.2075146701214175,
+      "share_append_only": 0.3187981626533457,
+      "share_derived": 0.46491603904127976,
+      "share_fixed": 0.008771128183957103,
+      "gain_controllable_share": 0.6235868915703144,
+      "gain_top_feature_share": 0.11469490401795464,
+      "gain_top_feature": "section.entry_name_hashed[39]"
+     }
+    }
+   ]
+  },
+  "lightgbm_ember2018_m6": {
+   "run": "lightgbm_ember2018_m6",
+   "command": "malvalid run --adapter examples/lightgbm_ember2018/adapter.py --config <build-dir>/release_realdata/configs/extraction.yaml --out <build-dir>/release_realdata/runs/lightgbm_ember2018_m6",
+   "exit_code": 0,
+   "verdict": "conditional",
+   "score": 80.3,
+   "raw_score": 80.3,
+   "capped": false,
+   "coverage": 1.0,
+   "reasons": [
+    "M4 Membership inference (training-data leakage): warn gate failed"
+   ],
+   "blockers": [],
+   "wall_s": 594.0,
+   "run_duration_s": 591.724,
+   "peak_rss_gb": 5.15,
+   "user_cpu_s": 651.67,
+   "corpus_content_hash": "b76ea441be1a62197c7d19801174309e988eea54740ff22f03fa75e66beb4b98",
+   "config_corpus": "ember_v2_2018",
+   "skipped": [],
+   "disabled": [],
+   "errored": [],
+   "warnings": [],
+   "model_sha256": [
+    "509de4a83e2d76b69fb3025ced0429e5f40f6a95ca40122b9eedd03317fff5e2"
+   ],
+   "tree_access": {
+    "available": true,
+    "n_trees": 1000,
+    "fidelity_max_abs_diff": 5.551115123125783e-17,
+    "n_rows_checked": 2000,
+    "rows_source": "corpus",
+    "tolerance": 0.0001,
+    "note": "verified: tree dump matches predict_proba (max |\u0394| = 5.6e-17 on 2000 corpus rows)",
+    "model_kind": "lightgbm"
+   },
+   "sandbox": {
+    "backend": "bwrap",
+    "startup_s": 3.274,
+    "load_s": 1.594,
+    "restarts": 0,
+    "timeouts": 0,
+    "crashes": 0,
+    "tree_access_note": "native_model via the lightgbm loader"
+   },
+   "max_seconds_per_module": 1800.0,
+   "modules": [
+    {
+     "code": "M0",
+     "id": "file_safety",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.131,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Scanned 1 artifact(s) (ember_model_2018.txt: LightGBM text model); no unsafe content found.",
+     "checks": [
+      {
+       "name": "critical_findings",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "findings_at_or_above_high",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "pickle_without_allow_pickle",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0001,
+     "key_metrics": {
+      "n_artifacts": 1,
+      "n_pickle": 0,
+      "n_critical": 0,
+      "n_high": 0,
+      "n_medium": 0,
+      "n_low": 0,
+      "n_policy_violations": 0,
+      "n_modelscan_scanned": 0,
+      "scanner": "modelscan",
+      "scanner_version": "0.8.8",
+      "allow_pickle": false,
+      "fail_on": "HIGH"
+     }
+    },
+    {
+     "code": "M1",
+     "id": "performance",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 75.0,
+     "duration_s": 17.561,
+     "skip_reason": null,
+     "error": null,
+     "finding": "At its declared operating threshold (0.8336) the model flags 1.00% of 100000 canonical benign samples (FPR; max 1.00%) and detects 96.5% of 100000 malicious samples (min 95.0%). Both hard-gate conditions hold.",
+     "checks": [
+      {
+       "name": "fpr",
+       "value": 0.01,
+       "op": "<=",
+       "threshold": 0.01,
+       "passed": true
+      },
+      {
+       "name": "detection_rate",
+       "value": 0.96498,
+       "op": ">=",
+       "threshold": 0.95,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0098,
+     "key_metrics": {
+      "detection_rate": 0.96498,
+      "fpr": 0.01,
+      "n_benign": 100000,
+      "n_malicious": 100000,
+      "threshold": 0.8336,
+      "auroc": 0.9964289467999999,
+      "auprc": 0.9969555993838837,
+      "brier": 0.018888216134787673,
+      "ece": 0.015305414310455524,
+      "tpr_at_fpr_0.001": 0.86935,
+      "tpr_at_fpr_0.01": 0.96498,
+      "threshold_at_max_fpr": 0.8340127344721416
+     }
+    },
+    {
+     "code": "M2",
+     "id": "drift",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 17.085,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Over 2 monthly windows after the training cutoff (2018-10-31), sample-weighted AUT(F1) is 0.977 (min 0.70; unweighted 0.977). F1 at the operating threshold drops by 0.009 from 0.982 (2018-11) to 0.973 (2018-12). Detection quality holds up on samples newer than the training data.",
+     "checks": [
+      {
+       "name": "aut_f1_weighted",
+       "value": 0.9771868468261201,
+       "op": ">=",
+       "threshold": 0.7,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0095,
+     "key_metrics": {
+      "n_windows": 2,
+      "first_window": "2018-11",
+      "last_window": "2018-12",
+      "f1_first": 0.9816832082627289,
+      "f1_last": 0.9726904853895113,
+      "f1_drop": 0.008992722873217618,
+      "aut_f1": 0.9771868468261201,
+      "aut_f1_weighted": 0.9771868468261201,
+      "effective_cutoff": "2018-10-31"
+     }
+    },
+    {
+     "code": "M4",
+     "id": "membership_inf",
+     "status": "warn",
+     "gate": "warn",
+     "gate_outcome": "failed",
+     "score": 45.9,
+     "duration_s": 3.032,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Worst-case membership advantage is 0.178 (ART black-box attack (random forest)) (upper bound: members and non-members come from different time periods), above the 0.10 limit: an attacker who can query the model can tell its training files from unseen files of the nearest time period well above chance (attack AUROC up to 0.615).",
+     "checks": [
+      {
+       "name": "membership_advantage",
+       "value": 0.17759999999999998,
+       "op": "<=",
+       "threshold": 0.1,
+       "passed": false
+      }
+     ],
+     "budget_fraction": 0.0017,
+     "key_metrics": {
+      "advantage": 0.17759999999999998,
+      "worst_attack": "art_rf",
+      "advantage_is_upper_bound": true,
+      "sampling_design": "nearest_time",
+      "time_matched": false,
+      "n_manifest_hashes": 600000,
+      "n_members_in_corpus": 600000,
+      "n_members_used": 5000,
+      "n_nonmembers_used": 5000,
+      "n_attack_train_pairs": 2500,
+      "n_attack_test_pairs": 2500,
+      "member_accuracy": 1.0,
+      "nonmember_accuracy": 0.979,
+      "accuracy_gap": 0.02100000000000002,
+      "max_auroc": 0.6146892,
+      "max_best_advantage": 0.18200000000000005,
+      "max_tpr_at_fpr_0.01": 0.0252,
+      "loss_threshold_advantage": 0.16759999999999997,
+      "loss_threshold_best_advantage": 0.17120000000000002,
+      "loss_threshold_auroc": 0.6146892,
+      "loss_threshold_tpr_at_fpr_0.01": 0.0252,
+      "art_rf_advantage": 0.17759999999999998,
+      "art_rf_best_advantage": 0.18200000000000005,
+      "art_rf_auroc": 0.60064408,
+      "art_rf_tpr_at_fpr_0.01": 0.0156,
+      "art_gb_advantage": 0.16920000000000002,
+      "art_gb_best_advantage": 0.1784,
+      "art_gb_auroc": 0.5980729600000001,
+      "art_gb_tpr_at_fpr_0.01": 0.0116
+     }
+    },
+    {
+     "code": "M5",
+     "id": "backdoor_screen",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 1.316,
+     "skip_reason": null,
+     "error": null,
+     "finding": "The static tree scan of 1000 trees (1479647 root\u2192leaf rules) found no backdoor-like rules (top suspicion 0.11 < 0.50). Screening only \u2014 absence of findings is not proof of a clean model.",
+     "checks": [
+      {
+       "name": "n_flagged_rules",
+       "value": 0.0,
+       "op": "<=",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0007,
+     "key_metrics": {
+      "n_triggers": 0,
+      "scan_ran": true,
+      "n_trees": 1000,
+      "n_trees_scanned": 1000,
+      "n_rules_scanned": 1479647,
+      "n_candidate_rules": 98073,
+      "n_flagged_rules": 0,
+      "n_flagged_features": 0,
+      "top_suspicion": 0.11155483655505756,
+      "top_feature_suspicion": 0.11159071759545873,
+      "top_suspicious_feature": "imports.functions_hashed[942]",
+      "scan_seconds": 1.309
+     }
+    },
+    {
+     "code": "M6",
+     "id": "extraction",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 77.6,
+     "duration_s": 51.788,
+     "skip_reason": null,
+     "error": null,
+     "finding": "A lightgbm surrogate trained on 10,000 hard-label queries agrees with your model on 93.4% of held-out samples (limit 95.0%): at this budget a clone built from its verdicts still disagrees with it on 6.6% of files.",
+     "checks": [
+      {
+       "name": "surrogate_fidelity",
+       "value": 0.9344,
+       "op": "<=",
+       "threshold": 0.95,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0288,
+     "key_metrics": {
+      "fidelity": 0.9344,
+      "fidelity_budget": 10000,
+      "fidelity_budget_effective": 10000,
+      "accuracy_at_fidelity_budget": 0.9238,
+      "model_accuracy": 0.9786,
+      "majority_baseline_fidelity": 0.516,
+      "max_fidelity_observed": 0.9574,
+      "queries_to_exceed_max_fidelity": 50000,
+      "surrogate": "lightgbm",
+      "method": "art.KnockoffNets(sampling_strategy='random')",
+      "n_eval": 5000,
+      "n_query_pool": 800000,
+      "query_pool_source": "pool_non_eval"
+     }
+    },
+    {
+     "code": "M7",
+     "id": "explanation",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 82.5,
+     "duration_s": 465.13,
+     "skip_reason": null,
+     "error": null,
+     "finding": "39.5% of the model's attribution (mean |SHAP| (exact TreeSHAP), controllability-weighted) sits on attacker-controllable features (limit 50.0%). The largest single feature, section.num_rx (append_only), carries 4.9% (limit 30.0%). The top 20 features hold 33.2% of the attribution (14 of them attacker-controllable); effective number of features 101.9.",
+     "checks": [
+      {
+       "name": "controllable_share",
+       "value": 0.39450512669969084,
+       "op": "<=",
+       "threshold": 0.5,
+       "passed": true
+      },
+      {
+       "name": "top_feature_share",
+       "value": 0.04942277997775167,
+       "op": "<=",
+       "threshold": 0.3,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.2584,
+     "key_metrics": {
+      "attribution_source": "tree_shap",
+      "controllable_share": 0.39450512669969084,
+      "top_feature_share": 0.04942277997775167,
+      "top_feature": "section.num_rx",
+      "top_feature_controllability": "append_only",
+      "effective_n_features": 101.92457980973386,
+      "top_k": 20,
+      "top_k_share": 0.33216809402517844,
+      "top_k_attacker_controllable_share": 0.24367867344211558,
+      "n_top_k_attacker_controllable": 14,
+      "n_features_used": 2166,
+      "shap_samples_requested": 2000,
+      "shap_samples_used": 531,
+      "share_controllable": 0.12596761532248985,
+      "share_append_only": 0.35805001516960133,
+      "share_derived": 0.4251213862349684,
+      "share_fixed": 0.09086098327294044,
+      "gain_controllable_share": 0.3390737982646209,
+      "gain_top_feature_share": 0.10036951492157717,
+      "gain_top_feature": "header.coff.characteristics_hashed[0]"
+     }
+    }
+   ]
+  },
+  "notrees_lightgbm_ember2018": {
+   "run": "notrees_lightgbm_ember2018",
+   "command": "malvalid run --adapter <build-dir>/release_realdata/notrees/adapter.py --out <build-dir>/release_realdata/runs/notrees_lightgbm_ember2018",
+   "exit_code": 0,
+   "verdict": "conditional",
+   "score": 77.7,
+   "raw_score": 77.7,
+   "capped": false,
+   "coverage": 0.8667,
+   "reasons": [
+    "score 77.7 is below the READY band (80)",
+    "M4 Membership inference (training-data leakage): warn gate failed",
+    "M5 Backdoor / poisoning screening was skipped (lowers coverage)"
+   ],
+   "blockers": [],
+   "wall_s": 255.1,
+   "run_duration_s": 252.868,
+   "peak_rss_gb": 5.61,
+   "user_cpu_s": 42.0,
+   "corpus_content_hash": "b76ea441be1a62197c7d19801174309e988eea54740ff22f03fa75e66beb4b98",
+   "config_corpus": "ember_v2_2018",
+   "skipped": [
+    "backdoor_screen"
+   ],
+   "disabled": [
+    "extraction"
+   ],
+   "errored": [],
+   "warnings": [],
+   "model_sha256": [
+    "509de4a83e2d76b69fb3025ced0429e5f40f6a95ca40122b9eedd03317fff5e2"
+   ],
+   "tree_access": {
+    "available": false,
+    "n_trees": null,
+    "fidelity_max_abs_diff": null,
+    "n_rows_checked": 0,
+    "rows_source": null,
+    "tolerance": 0.0001,
+    "note": "the model does not expose its tree structure; tree-based analyses are unavailable"
+   },
+   "sandbox": {
+    "backend": "bwrap",
+    "startup_s": 3.208,
+    "load_s": 1.406,
+    "restarts": 0,
+    "timeouts": 0,
+    "crashes": 0,
+    "tree_access_note": "the adapter exposes neither tree_ensemble() nor native_model"
+   },
+   "max_seconds_per_module": 1800.0,
+   "modules": [
+    {
+     "code": "M0",
+     "id": "file_safety",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.137,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Scanned 1 artifact(s) (ember_model_2018.txt: LightGBM text model); no unsafe content found.",
+     "checks": [
+      {
+       "name": "critical_findings",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "findings_at_or_above_high",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "pickle_without_allow_pickle",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0001,
+     "key_metrics": {
+      "n_artifacts": 1,
+      "n_pickle": 0,
+      "n_critical": 0,
+      "n_high": 0,
+      "n_medium": 0,
+      "n_low": 0,
+      "n_policy_violations": 0,
+      "n_modelscan_scanned": 0,
+      "scanner": "modelscan",
+      "scanner_version": "0.8.8",
+      "allow_pickle": false,
+      "fail_on": "HIGH"
+     }
+    },
+    {
+     "code": "M1",
+     "id": "performance",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 75.0,
+     "duration_s": 17.655,
+     "skip_reason": null,
+     "error": null,
+     "finding": "At its declared operating threshold (0.8336) the model flags 1.00% of 100000 canonical benign samples (FPR; max 1.00%) and detects 96.5% of 100000 malicious samples (min 95.0%). Both hard-gate conditions hold.",
+     "checks": [
+      {
+       "name": "fpr",
+       "value": 0.01,
+       "op": "<=",
+       "threshold": 0.01,
+       "passed": true
+      },
+      {
+       "name": "detection_rate",
+       "value": 0.96498,
+       "op": ">=",
+       "threshold": 0.95,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0098,
+     "key_metrics": {
+      "detection_rate": 0.96498,
+      "fpr": 0.01,
+      "n_benign": 100000,
+      "n_malicious": 100000,
+      "threshold": 0.8336,
+      "auroc": 0.9964289467999999,
+      "auprc": 0.9969555993838837,
+      "brier": 0.018888216134787673,
+      "ece": 0.015305414310455524,
+      "tpr_at_fpr_0.001": 0.86935,
+      "tpr_at_fpr_0.01": 0.96498,
+      "threshold_at_max_fpr": 0.8340127344721416
+     }
+    },
+    {
+     "code": "M2",
+     "id": "drift",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 17.743,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Over 2 monthly windows after the training cutoff (2018-10-31), sample-weighted AUT(F1) is 0.977 (min 0.70; unweighted 0.977). F1 at the operating threshold drops by 0.009 from 0.982 (2018-11) to 0.973 (2018-12). Detection quality holds up on samples newer than the training data.",
+     "checks": [
+      {
+       "name": "aut_f1_weighted",
+       "value": 0.9771868468261201,
+       "op": ">=",
+       "threshold": 0.7,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0099,
+     "key_metrics": {
+      "n_windows": 2,
+      "first_window": "2018-11",
+      "last_window": "2018-12",
+      "f1_first": 0.9816832082627289,
+      "f1_last": 0.9726904853895113,
+      "f1_drop": 0.008992722873217618,
+      "aut_f1": 0.9771868468261201,
+      "aut_f1_weighted": 0.9771868468261201,
+      "effective_cutoff": "2018-10-31"
+     }
+    },
+    {
+     "code": "M4",
+     "id": "membership_inf",
+     "status": "warn",
+     "gate": "warn",
+     "gate_outcome": "failed",
+     "score": 45.9,
+     "duration_s": 6.259,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Worst-case membership advantage is 0.178 (ART black-box attack (random forest)) (upper bound: members and non-members come from different time periods), above the 0.10 limit: an attacker who can query the model can tell its training files from unseen files of the nearest time period well above chance (attack AUROC up to 0.615).",
+     "checks": [
+      {
+       "name": "membership_advantage",
+       "value": 0.17759999999999998,
+       "op": "<=",
+       "threshold": 0.1,
+       "passed": false
+      }
+     ],
+     "budget_fraction": 0.0035,
+     "key_metrics": {
+      "advantage": 0.17759999999999998,
+      "worst_attack": "art_rf",
+      "advantage_is_upper_bound": true,
+      "sampling_design": "nearest_time",
+      "time_matched": false,
+      "n_manifest_hashes": 600000,
+      "n_members_in_corpus": 600000,
+      "n_members_used": 5000,
+      "n_nonmembers_used": 5000,
+      "n_attack_train_pairs": 2500,
+      "n_attack_test_pairs": 2500,
+      "member_accuracy": 1.0,
+      "nonmember_accuracy": 0.979,
+      "accuracy_gap": 0.02100000000000002,
+      "max_auroc": 0.6146892,
+      "max_best_advantage": 0.18200000000000005,
+      "max_tpr_at_fpr_0.01": 0.0252,
+      "loss_threshold_advantage": 0.16759999999999997,
+      "loss_threshold_best_advantage": 0.17120000000000002,
+      "loss_threshold_auroc": 0.6146892,
+      "loss_threshold_tpr_at_fpr_0.01": 0.0252,
+      "art_rf_advantage": 0.17759999999999998,
+      "art_rf_best_advantage": 0.18200000000000005,
+      "art_rf_auroc": 0.60064408,
+      "art_rf_tpr_at_fpr_0.01": 0.0156,
+      "art_gb_advantage": 0.16920000000000002,
+      "art_gb_best_advantage": 0.1784,
+      "art_gb_auroc": 0.5980729600000001,
+      "art_gb_tpr_at_fpr_0.01": 0.0116
+     }
+    },
+    {
+     "code": "M5",
+     "id": "backdoor_screen",
+     "status": "skipped",
+     "gate": "warn",
+     "gate_outcome": "not_evaluated",
+     "score": null,
+     "duration_s": 0.003,
+     "skip_reason": "model does not expose its tree structure (the static scan needs the trees) and no trigger hypotheses were supplied (backdoor_screen.triggers / triggers_path)",
+     "error": null,
+     "finding": "Not run \u2014 model does not expose its tree structure (the static scan needs the trees) and no trigger hypotheses were supplied (backdoor_screen.triggers / triggers_path)",
+     "checks": [],
+     "budget_fraction": 0.0,
+     "key_metrics": {}
+    },
+    {
+     "code": "M7",
+     "id": "explanation",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 84.3,
+     "duration_s": 205.001,
+     "skip_reason": null,
+     "error": null,
+     "finding": "37.0% of the model's attribution (mean |SHAP| (model-agnostic permutation SHAP), controllability-weighted) sits on attacker-controllable features (limit 50.0%). The largest single feature, section.num_rx (append_only), carries 5.6% (limit 30.0%). The top 20 features hold 29.1% of the attribution (15 of them attacker-controllable); effective number of features 120.6.",
+     "checks": [
+      {
+       "name": "controllable_share",
+       "value": 0.36990414430989604,
+       "op": "<=",
+       "threshold": 0.5,
+       "passed": true
+      },
+      {
+       "name": "top_feature_share",
+       "value": 0.05561001795655571,
+       "op": "<=",
+       "threshold": 0.3,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.1139,
+     "key_metrics": {
+      "attribution_source": "permutation_shap",
+      "controllable_share": 0.36990414430989604,
+      "top_feature_share": 0.05561001795655571,
+      "top_feature": "section.num_rx",
+      "top_feature_controllability": "append_only",
+      "effective_n_features": 120.56800906642917,
+      "top_k": 20,
+      "top_k_share": 0.2913950842199749,
+      "top_k_attacker_controllable_share": 0.24190622831319478,
+      "n_top_k_attacker_controllable": 15,
+      "n_features_used": 1679,
+      "shap_samples_requested": 2000,
+      "shap_samples_used": 52,
+      "share_controllable": 0.12021276867647158,
+      "share_append_only": 0.33292183417789933,
+      "share_derived": 0.4939617487405003,
+      "share_fixed": 0.0529036484051288
+     }
+    }
+   ]
+  },
+  "notrees_m5_triggers": {
+   "run": "notrees_m5_triggers",
+   "command": "malvalid run --adapter <build-dir>/release_realdata/notrees/adapter.py --config <build-dir>/release_realdata/configs/triggers.yaml --out <build-dir>/release_realdata/runs/notrees_m5_triggers --only M5",
+   "exit_code": 0,
+   "verdict": "conditional",
+   "score": 100.0,
+   "raw_score": 100.0,
+   "capped": false,
+   "coverage": 1.0,
+   "reasons": [
+    "performance must pass for a READY verdict (not run)"
+   ],
+   "blockers": [],
+   "wall_s": 8.6,
+   "run_duration_s": 6.816,
+   "peak_rss_gb": 0.83,
+   "user_cpu_s": 5.03,
+   "corpus_content_hash": "b76ea441be1a62197c7d19801174309e988eea54740ff22f03fa75e66beb4b98",
+   "config_corpus": "ember_v2_2018",
+   "skipped": [],
+   "disabled": [
+    "performance",
+    "drift",
+    "membership_inf",
+    "extraction",
+    "explanation"
+   ],
+   "errored": [],
+   "warnings": [],
+   "model_sha256": [
+    "509de4a83e2d76b69fb3025ced0429e5f40f6a95ca40122b9eedd03317fff5e2"
+   ],
+   "tree_access": {
+    "available": false,
+    "n_trees": null,
+    "fidelity_max_abs_diff": null,
+    "n_rows_checked": 0,
+    "rows_source": null,
+    "tolerance": 0.0001,
+    "note": "the model does not expose its tree structure; tree-based analyses are unavailable"
+   },
+   "sandbox": {
+    "backend": "bwrap",
+    "startup_s": 3.137,
+    "load_s": 1.354,
+    "restarts": 0,
+    "timeouts": 0,
+    "crashes": 0,
+    "tree_access_note": "the adapter exposes neither tree_ensemble() nor native_model"
+   },
+   "max_seconds_per_module": 1800.0,
+   "modules": [
+    {
+     "code": "M0",
+     "id": "file_safety",
+     "status": "pass",
+     "gate": "hard",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.159,
+     "skip_reason": null,
+     "error": null,
+     "finding": "Scanned 1 artifact(s) (ember_model_2018.txt: LightGBM text model); no unsafe content found.",
+     "checks": [
+      {
+       "name": "critical_findings",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "findings_at_or_above_high",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      },
+      {
+       "name": "pickle_without_allow_pickle",
+       "value": 0.0,
+       "op": "==",
+       "threshold": 0.0,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0001,
+     "key_metrics": {
+      "n_artifacts": 1,
+      "n_pickle": 0,
+      "n_critical": 0,
+      "n_high": 0,
+      "n_medium": 0,
+      "n_low": 0,
+      "n_policy_violations": 0,
+      "n_modelscan_scanned": 0,
+      "scanner": "modelscan",
+      "scanner_version": "0.8.8",
+      "allow_pickle": false,
+      "fail_on": "HIGH"
+     }
+    },
+    {
+     "code": "M5",
+     "id": "backdoor_screen",
+     "status": "pass",
+     "gate": "warn",
+     "gate_outcome": "passed",
+     "score": 100.0,
+     "duration_s": 0.683,
+     "skip_reason": null,
+     "error": null,
+     "finding": "None of the 2 trigger hypotheses lowers detection by more than 20.0 pp (worst: 'zero_timestamp', 0.7 pp). Screening only \u2014 absence of findings is not proof of a clean model.",
+     "checks": [
+      {
+       "name": "max_trigger_drop",
+       "value": 0.007499999999999951,
+       "op": "<=",
+       "threshold": 0.2,
+       "passed": true
+      }
+     ],
+     "budget_fraction": 0.0004,
+     "key_metrics": {
+      "n_triggers": 2,
+      "scan_ran": false,
+      "max_trigger_drop": 0.007499999999999951,
+      "worst_trigger": "zero_timestamp",
+      "n_flagged_triggers": 0,
+      "dr_before": 0.961,
+      "n_trigger_samples": 2000,
+      "n_trigger_detected": 1922
+     }
+    }
+   ]
+  }
+ },
+ "notree_stress": {
+  "tree_access": {
+   "available": false,
+   "n_trees": null,
+   "fidelity_max_abs_diff": null,
+   "n_rows_checked": 0,
+   "rows_source": null,
+   "tolerance": 0.0001,
+   "note": "the model does not expose its tree structure; tree-based analyses are unavailable"
+  },
+  "m5": {
+   "status": "skipped",
+   "skip_reason": "model does not expose its tree structure (the static scan needs the trees) and no trigger hypotheses were supplied (backdoor_screen.triggers / triggers_path)",
+   "with_trigger_hypotheses": {
+    "run": "notrees_m5_triggers",
+    "status": "pass",
+    "max_trigger_drop": 0.007499999999999951,
+    "worst_trigger": "zero_timestamp",
+    "wall_s": 8.6
+   }
+  },
+  "m7": {
+   "attribution_source": "permutation_shap",
+   "finished_inside_budget": true,
+   "duration_s": 205.001,
+   "max_seconds_per_module": 1800.0,
+   "budget_fraction": 0.114,
+   "rows_requested": 2000,
+   "rows_used": 52,
+   "controllable_share": 0.36990414430989604,
+   "top_feature": "section.num_rx",
+   "top_feature_share": 0.05561001795655571,
+   "reference_tree_shap": {
+    "duration_s": 464.093,
+    "rows_used": 531,
+    "controllable_share": 0.39450512669969084,
+    "top_feature": "section.num_rx",
+    "top_feature_share": 0.04942277997775167
+   }
+  },
+  "total_wall_s": 255.1,
+  "tree_run_wall_s": 546.0
+ }
+}

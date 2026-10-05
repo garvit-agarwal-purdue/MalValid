@@ -1,0 +1,76 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% set modules = modules or [] %}
+{% block title %}Modules{% endblock %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>Test modules</h1>
+<p class="lede">The battery behind every verdict, in scorecard order. Each test scores one axis from 0 to 100. The headline score is their weighted mean over the tests that actually ran; a test that cannot run is skipped (never passed) and lowers coverage.</p>
+</div>
+<div class="btn-row"><a class="btn primary" href="{{ root }}/runs/new">{{ ui.icon("i-plus") }}<span>New run</span></a></div>
+</div>
+
+<section class="card" aria-labelledby="how-h">
+<h2 id="how-h">How a verdict is reached</h2>
+<div class="grid-cards">
+<div><p>{{ ui.chip("tone-critical", "i-block", "Blocked") }}</p><p class="small">A hard gate failed, a test errored, a hard gate could not be evaluated, or M0 refused the model file. The score is capped at 49 and CI fails.</p></div>
+<div><p>{{ ui.chip("tone-serious", "i-fail", "Not ready") }}</p><p class="small">The score is below the conditional band (60 by default).</p></div>
+<div><p>{{ ui.chip("tone-warning", "i-warn", "Conditional") }}</p><p class="small">The score is high enough, but a warn gate failed, coverage is thin or a required test was skipped. Promotion needs a human decision.</p></div>
+<div><p>{{ ui.chip("tone-good", "i-pass", "Ready") }}</p><p class="small">The score is at least 80 (by default), no gate failed and enough of the battery was evaluated.</p></div>
+</div>
+<p class="small muted">A <strong>hard</strong> gate blocks promotion when it fails; a <strong>warn</strong> gate is reported and weighs on the verdict but does not block. Gates, thresholds, weights and bands are policy in <code>gate.yaml</code>. Screening tests can find evidence of a problem but cannot prove it is absent.</p>
+</section>
+
+{% if modules %}
+{% for m in modules %}
+<section class="card" id="mod-{{ (m.id or loop.index)|string|urlencode }}" aria-labelledby="mod-{{ loop.index }}-h">
+<div class="item-head">
+<h2 id="mod-{{ loop.index }}-h"><span class="code-pill">{{ m.code or "?" }}</span><span>{{ m.title or m.id or "Unnamed module" }}</span></h2>
+<div class="badges">
+{{ ui.gate_badge(m.default_gate) }}
+{% if m.screening %}{{ ui.screening_badge() }}{% endif %}
+{% if m.enabled_by_default is sameas false %}<span class="badge" title="Enable it in gate.yaml or with Run only">off by default</span>{% elif m.enabled_by_default is sameas true %}<span class="badge">on by default</span>{% endif %}
+{% if m.weight is number %}<span class="badge" title="Weight in the headline score">weight {{ m.weight|fmt_num }}</span>{% elif m.scored is sameas false %}<span class="badge" title="Gates the verdict but is not a scored axis">precondition, not scored</span>{% endif %}
+{% if m.id %}<code class="small">{{ m.id }}</code>{% endif %}
+</div>
+</div>
+{% if m.description %}<p class="desc">{{ m.description }}</p>{% endif %}
+<div class="fields-2">
+<div>
+<h3 class="small muted">Needs</h3>
+{% set reqs = m.requires or [] %}{% set any_reqs = m.requires_any or [] %}
+<ul class="req-list">
+{% for r in reqs %}<li>{{ ui.icon("i-check") }}<span><strong>{{ r|requirement_label }}.</strong> {{ r|requirement_hint }}</span></li>{% endfor %}
+{% if any_reqs %}<li>{{ ui.icon("i-check") }}<span><strong>One of: {% for r in any_reqs %}{{ r|requirement_label }}{% if not loop.last %} or {% endif %}{% endfor %}.</strong>{% for r in any_reqs %} {{ r|requirement_hint }}{% endfor %}</span></li>{% endif %}
+{% if not reqs and not any_reqs %}<li>{{ ui.icon("i-check") }}<span>Nothing beyond the adapter; it always runs.</span></li>{% endif %}
+{% for r in m.enhanced_by or [] %}<li>{{ ui.icon("i-plus") }}<span><strong>Better with {{ r|requirement_label|lower }}.</strong> {{ r|requirement_hint }}</span></li>{% endfor %}
+</ul>
+</div>
+<div>
+<h3 class="small muted">Default parameters</h3>
+{% set params = m.default_params or {} %}
+{% if params %}<ul class="params">{% for k, v in params|dictsort %}<li>{{ k }}: {{ v|fmt_value(80) }}</li>{% endfor %}</ul>
+{% else %}<p class="small muted">No parameters.</p>{% endif %}
+</div>
+</div>
+</section>
+{% endfor %}
+{% else %}
+<section class="empty" aria-labelledby="empty-h">
+<h2 id="empty-h">No test modules are registered</h2>
+<p class="lede">MalValid found no test modules, which usually means a broken installation. Reinstall MalValid and list them from a terminal:</p>
+{{ ui.cmd("cli-mods", "malvalid list-modules") }}
+</section>
+{% endif %}
+
+<section class="card" id="policy" aria-labelledby="policy-h">
+<div class="section-title">
+<h2 id="policy-h">Default gate policy</h2>
+{% if default_config_text %}{{ ui.copy_button("policy-yaml", "Copy YAML") }}{% endif %}
+</div>
+<p class="small">Runs use this policy unless you supply your own. Write a copy to edit, then pass it with <code>--config</code> or upload it on the New run page:</p>
+{{ ui.cmd("cli-init", "malvalid init-config gate.yaml") }}
+{% if default_config_text %}<pre class="code" id="policy-yaml">{{ default_config_text }}</pre>{% else %}<p class="muted small">The default policy text is not available.</p>{% endif %}
+</section>
+{% endblock %}

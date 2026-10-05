@@ -1,0 +1,80 @@
+# DEMO policy: based on the packaged default policy, with `corpus: synthetic_v2` (keys left out take their defaults).
+# Synthetic data is for demos and CI only; verdicts say nothing about real-world readiness.
+# malvalid gate configuration.
+#
+# Thresholds are your organization's policy, not physics: tune them. Each module's `gate` is
+# `hard` (failure => non-zero exit, blocks promotion) or `warn` (reported, does not block).
+# Only M0 file safety and M1 FPR/DR at the operating threshold (performance) are hard by default:
+# an unsafe model file or a high-false-positive detector is unshippable regardless of everything
+# else. file_safety (M0) always runs first.
+
+corpus: synthetic_v2        # SYNTHETIC demo corpus (generated on first use). Demos and CI only.
+corpus_dir: null            # override the corpus location (default: $MALVALID_CORPUS_DIR/<corpus>)
+
+modules:
+  file_safety:              # M0 — scan the artifact before it is ever deserialized
+    enabled: true
+    gate: hard
+    fail_on: HIGH           # lowest modelscan severity that fails the gate (CRITICAL always aborts)
+
+  performance:              # M1 — DR / FPR at the declared operating threshold, ROC, calibration
+    enabled: true
+    gate: hard
+    max_fpr: 0.01
+    min_detection: 0.95
+
+  drift:                    # M2 — TESSERACT-style time-aware evaluation, AUT(F1)
+    enabled: true
+    gate: warn
+    min_aut_f1: 0.70
+
+  membership_inf:           # M4 — black-box membership inference (needs training_hashes_path)
+    enabled: true
+    gate: warn
+    max_advantage: 0.10
+
+  backdoor_screen:          # M5 — trigger-hypothesis test + tree-structure anomaly scan (screening)
+    enabled: true
+    gate: warn
+
+  extraction:               # M6 — model-stealing susceptibility (only if exposed as a service)
+    enabled: false
+    gate: warn
+
+  explanation:              # M7 — global importance + SHAP; reliance on attacker-controllable features
+    enabled: true
+    gate: warn
+
+runtime:
+  seed: 0
+  sandbox: true             # load/run the submitted model in an isolated, no-network subprocess
+  sandbox_backend: auto     # auto | bwrap | unshare | subprocess
+  sandbox_memory_mb: 32768
+  threads: 8                # OpenMP threads for the model inside the sandbox
+  max_seconds_per_module: 1800
+  allow_pickle: false       # same as --allow-pickle; pickles can execute code on load
+  skipped_hard_gate_fails: true   # a hard gate that could not be evaluated blocks promotion
+  chunk_rows: 20000         # rows per scoring request to the sandbox
+
+report:
+  title: null
+  html: true
+
+# Headline production-readiness verdict: READY / CONDITIONAL / NOT_READY / BLOCKED plus a 0-100
+# score = weighted mean of per-axis scores over the tests that actually ran. A failed hard gate,
+# an errored module, or an M0 abort => BLOCKED (score capped). Skipped tests never count as
+# passes: they lower `coverage`. Weights and bands are your policy — tune them.
+verdict:
+  ready_min: 80             # score needed for READY (plus: no gate failed, coverage, required axes)
+  conditional_min: 60       # below this => NOT_READY
+  min_coverage_ready: 0.75  # fraction of weighted battery that must have run for READY
+  blocked_score_cap: 49     # a BLOCKED model never shows a score above this
+  required_for_ready: [performance]
+  default_weight: 1.0
+  weights:
+    performance: 3
+    drift: 1.5
+    membership_inf: 1
+    backdoor_screen: 1
+    extraction: 0.5
+    explanation: 1

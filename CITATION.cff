@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use MalValid in your research, please cite it as below."
+type: software
+title: MalValid
+abstract: >-
+  MalValid is a pre-deployment reliability and security gate for malware-detection
+  machine-learning models. It scans a submitted model file, loads it in a sandbox,
+  runs a battery of tests on a hash-pinned evaluation corpus and returns a
+  READY / CONDITIONAL / NOT_READY / BLOCKED verdict with a 0-100 score.
+authors:
+  - family-names: Agarwal
+    given-names: Garvit
+version: 0.1.0
+license: Apache-2.0
+repository-code: "https://github.com/garvit-agarwal-purdue/MalValid"
+url: "https://github.com/garvit-agarwal-purdue/MalValid"
+keywords:
+  - malware detection
+  - machine learning
+  - model evaluation
+  - security
+  - deployment gate

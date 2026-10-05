@@ -1,0 +1,56 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% set corpora = corpora or [] %}
+{% block title %}Corpora{% endblock %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>Canonical corpora</h1>
+<p class="lede">MalValid evaluates your model on a fixed, versioned corpus of feature vectors (never raw malware), so runs are comparable across models and over time. The corpus must be in your model's <code>feature_version</code>. Corpora are read from <code>$MALVALID_CORPUS_DIR/&lt;name&gt;</code> unless a run overrides the directory.</p>
+</div>
+</div>
+
+{% if corpora %}
+<div class="grid-cards">
+{% for c in corpora %}
+<section class="card" aria-labelledby="c-{{ loop.index }}-h">
+<div class="item-head">
+<h2 id="c-{{ loop.index }}-h"><code>{{ c.name or "unnamed corpus" }}</code></h2>
+<div class="badges">
+{% if c.available %}{{ ui.chip("tone-good", "i-pass", "Installed") }}{% else %}{{ ui.chip("tone-neutral", "i-skip", "Not installed") }}{% endif %}
+{% if c.synthetic %}{{ ui.chip("tone-warning", "i-warn", "Synthetic") }}{% endif %}
+</div>
+</div>
+{% if c.description %}<p class="desc">{{ c.description }}</p>{% endif %}
+{% if c.synthetic %}<p class="small muted">Generated data for demos and CI: results on it exercise the pipeline and say nothing about real-world performance.</p>{% endif %}
+<dl class="facts">
+<dt>Feature version</dt><dd>{{ c.feature_version or "—" }}</dd>
+{% if c.version %}<dt>Version</dt><dd>{{ c.version }}</dd>{% endif %}
+{% if c.n is number %}<dt>Samples</dt><dd>{{ c.n|fmt_num }}</dd>{% endif %}
+{% if c.location %}<dt>Location</dt><dd><code class="wrap-any">{{ c.location }}</code></dd>{% endif %}
+{% if c.content_hash %}<dt>Content hash</dt><dd><code class="wrap-any">{{ c.content_hash }}</code></dd>{% endif %}
+</dl>
+{% if not c.available %}
+<div class="callout tone-neutral small">{{ ui.icon("i-info") }}<div>
+{% if c.hint %}<p class="wrap-any">{{ c.hint }}</p>{% else %}<p>Build it from its public source files, then check it:</p>{% endif %}
+{{ ui.cmd("build-" ~ loop.index, "malvalid corpus build " ~ ((c.name or "NAME")|shell_quote) ~ " --source /path/to/source-files") }}
+</div></div>
+{% endif %}
+</section>
+{% endfor %}
+</div>
+<section class="card" aria-labelledby="cli-h">
+<h2 id="cli-h">From a terminal</h2>
+<p class="small muted">List the corpora, inspect one, and re-verify its content hashes after copying it to another machine:</p>
+{{ ui.cmd("cli-list", "malvalid corpus list") }}
+{{ ui.cmd("cli-verify", "malvalid corpus verify " ~ ((corpora[0].name or "NAME")|shell_quote)) }}
+</section>
+{% else %}
+<section class="empty" aria-labelledby="empty-h">
+<h2 id="empty-h">No corpus providers are registered</h2>
+<p class="lede">MalValid found no corpus providers, which usually means a broken installation. Reinstall MalValid, then list the corpora it knows about:</p>
+{{ ui.cmd("cli-list", "malvalid corpus list") }}
+<p class="small muted">Tests that need the feature space (M1, M2, M4 and parts of M5 and M7) are skipped without a corpus.</p>
+</section>
+{% endif %}
+{% endblock %}

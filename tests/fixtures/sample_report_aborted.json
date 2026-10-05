@@ -1,0 +1,604 @@
+{
+ "schema_version": "malvalid-report/1",
+ "tool": {
+  "name": "malvalid",
+  "version": "0.1.0"
+ },
+ "title": null,
+ "run": {
+  "id": "20260928T140211Z-a2d1c6",
+  "started_at": "2026-09-28T14:02:11+00:00",
+  "finished_at": "2026-09-28T14:02:28.700000+00:00",
+  "duration_s": 17.7,
+  "command": "malvalid run --adapter /scratch/researcher/adapter/my_detector_adapter.py --config gate.yaml --out /scratch/researcher/runs/aborted",
+  "seed": 0,
+  "out_dir": "/scratch/researcher/runs/aborted",
+  "report_json": "/scratch/researcher/runs/aborted/report.json",
+  "report_html": "/scratch/researcher/runs/aborted/report.html",
+  "run_log": "/scratch/researcher/runs/aborted/run.log",
+  "only": null,
+  "skip": [],
+  "allow_pickle": false
+ },
+ "verdict": {
+  "verdict": "blocked",
+  "label": "Blocked — unsafe model artifact",
+  "score": null,
+  "raw_score": null,
+  "capped": false,
+  "coverage": 0.0,
+  "reasons": [
+   "run aborted before the model was loaded: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "M0 Model file safety: hard gate failed",
+   "M1 Performance & calibration: hard gate not evaluated (run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given)",
+   "M1 Performance & calibration was skipped (lowers coverage)",
+   "M2 Temporal drift was skipped (lowers coverage)",
+   "M4 Membership inference was skipped (lowers coverage)",
+   "M5 Backdoor / poisoning screen was skipped (lowers coverage)",
+   "M7 Explanation & spurious-feature reliance was skipped (lowers coverage)"
+  ],
+  "blockers": [
+   "run aborted before the model was loaded: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "M0 Model file safety: hard gate failed",
+   "M1 Performance & calibration: hard gate not evaluated (run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given)"
+  ],
+  "axes": [
+   {
+    "module_id": "performance",
+    "code": "M1",
+    "title": "Performance & calibration",
+    "weight": 3.0,
+    "score": null,
+    "status": "skipped",
+    "gate": "hard",
+    "gate_outcome": "not_evaluated",
+    "screening": false,
+    "counted": false
+   },
+   {
+    "module_id": "drift",
+    "code": "M2",
+    "title": "Temporal drift",
+    "weight": 1.5,
+    "score": null,
+    "status": "skipped",
+    "gate": "warn",
+    "gate_outcome": "not_evaluated",
+    "screening": false,
+    "counted": false
+   },
+   {
+    "module_id": "membership_inf",
+    "code": "M4",
+    "title": "Membership inference",
+    "weight": 1.0,
+    "score": null,
+    "status": "skipped",
+    "gate": "warn",
+    "gate_outcome": "not_evaluated",
+    "screening": false,
+    "counted": false
+   },
+   {
+    "module_id": "backdoor_screen",
+    "code": "M5",
+    "title": "Backdoor / poisoning screen",
+    "weight": 1.0,
+    "score": null,
+    "status": "skipped",
+    "gate": "warn",
+    "gate_outcome": "not_evaluated",
+    "screening": true,
+    "counted": false
+   },
+   {
+    "module_id": "explanation",
+    "code": "M7",
+    "title": "Explanation & spurious-feature reliance",
+    "weight": 1.0,
+    "score": null,
+    "status": "skipped",
+    "gate": "warn",
+    "gate_outcome": "not_evaluated",
+    "screening": false,
+    "counted": false
+   }
+  ],
+  "bands": {
+   "ready_min": 80.0,
+   "conditional_min": 60.0,
+   "min_coverage_ready": 0.75,
+   "blocked_score_cap": 49.0
+  },
+  "summary": "Blocked — unsafe model artifact. No axis could be scored."
+ },
+ "gate": {
+  "exit_code": 1,
+  "exit_meaning": "gate failed: the run is BLOCKED (a hard gate failed / could not be evaluated / M0 aborted) or the verdict is at or below --fail-on",
+  "passed": false,
+  "fail_on": "blocked",
+  "hard_gates": [
+   {
+    "module_id": "file_safety",
+    "code": "M0",
+    "title": "Model file safety",
+    "status": "fail",
+    "gate_outcome": "failed"
+   },
+   {
+    "module_id": "performance",
+    "code": "M1",
+    "title": "Performance & calibration",
+    "status": "skipped",
+    "gate_outcome": "not_evaluated"
+   }
+  ],
+  "failed_hard": [
+   "file_safety"
+  ],
+  "not_evaluated_hard": [
+   "performance"
+  ],
+  "errored": [],
+  "skipped": [
+   "performance",
+   "drift",
+   "membership_inf",
+   "backdoor_screen",
+   "explanation"
+  ],
+  "aborted": true,
+  "abort_reason": "gbdt.pkl is a pickle and --allow-pickle was not given",
+  "load_error": "model was not loaded: the run was aborted by M0",
+  "disabled": [
+   "extraction"
+  ],
+  "deselected": []
+ },
+ "model": {
+  "feature_version": "ember_v2",
+  "model_kind": "sklearn_gbdt",
+  "operating_threshold": 0.8,
+  "training_hashes_path": "/scratch/researcher/adapter/train_hashes.txt",
+  "training_cutoff": "2017-12-31",
+  "model_paths": [
+   "/scratch/researcher/adapter/model/gbdt.pkl"
+  ],
+  "adapter_path": "/scratch/researcher/adapter/my_detector_adapter.py",
+  "class_name": "SklearnGBDetector",
+  "has_featurize": false,
+  "extras": {},
+  "artifacts": [
+   {
+    "path": "/scratch/researcher/adapter/model/gbdt.pkl",
+    "sha256": "72011de1615787944489195e6ef219be09ee493f59ae66a491a0598e63117ec5",
+    "size": 18734112,
+    "format": "pickle",
+    "is_pickle": true
+   }
+  ],
+  "adapter_sha256": "b88cfaba508e1b76aeef0c4c524e7719e4d8dd9634319cbb39fa966e43a0dbde",
+  "tree_access": {
+   "available": false,
+   "n_trees": null,
+   "fidelity_max_abs_diff": null,
+   "note": "model not loaded (run aborted by M0)"
+  },
+  "load_error": "model was not loaded: the run was aborted by M0",
+  "query_count": null
+ },
+ "corpus": {
+  "name": "ember_v2_2018",
+  "version": "2018.2",
+  "feature_version": "ember_v2",
+  "content_hash": "32685998695a59d1ab13a1870ad286a8396520dfb60209655a3424f566a56777",
+  "n": 1000000,
+  "dim": 2381,
+  "synthetic": false,
+  "splits": {
+   "train": {
+    "n": 800000,
+    "malicious": 300000,
+    "benign": 300000,
+    "unlabeled": 200000
+   },
+   "test": {
+    "n": 200000,
+    "malicious": 100000,
+    "benign": 100000,
+    "unlabeled": 0
+   }
+  },
+  "roles": {
+   "eval": [
+    "test"
+   ],
+   "temporal": [
+    "train",
+    "test"
+   ],
+   "pool": [
+    "train"
+   ]
+  },
+  "time_range": [
+   "2017-01-01",
+   "2018-12-31"
+  ],
+  "source": "EMBER2018 features (vectorized from the published raw JSONL)",
+  "error": null,
+  "excluded_training_members": 0,
+  "available": true,
+  "used_for_evaluation": false,
+  "provider": "malvalid.corpora:ember_v2_2018",
+  "location": "/scratch/researcher/malvalid_corpora/ember_v2_2018",
+  "path": "/scratch/researcher/malvalid_corpora/ember_v2_2018"
+ },
+ "schema": {
+  "name": "ember_v2",
+  "dim": 2381,
+  "featurize_available": false
+ },
+ "training_manifest": {
+  "path": "/scratch/researcher/adapter/train_hashes.txt",
+  "n_hashes": 600000,
+  "n_in_corpus": 598870,
+  "declared": true,
+  "cutoff": "2017-12-31",
+  "cutoff_parsed": "2017-12-31",
+  "warnings": []
+ },
+ "capabilities": [],
+ "config": {
+  "corpus": "ember_v2_2018",
+  "corpus_dir": null,
+  "sample_dir": null,
+  "modules": {
+   "file_safety": {
+    "enabled": true,
+    "gate": "hard",
+    "fail_on": "HIGH"
+   },
+   "performance": {
+    "enabled": true,
+    "gate": "hard",
+    "max_fpr": 0.01,
+    "min_detection": 0.95
+   },
+   "drift": {
+    "enabled": true,
+    "gate": "warn",
+    "min_aut_f1": 0.7
+   },
+   "membership_inf": {
+    "enabled": true,
+    "gate": "warn",
+    "max_advantage": 0.1
+   },
+   "backdoor_screen": {
+    "enabled": true,
+    "gate": "warn"
+   },
+   "extraction": {
+    "enabled": false,
+    "gate": "warn"
+   },
+   "explanation": {
+    "enabled": true,
+    "gate": "warn"
+   }
+  },
+  "runtime": {
+   "seed": 0,
+   "sandbox": true,
+   "sandbox_backend": "auto",
+   "allow_reduced_isolation": false,
+   "sandbox_memory_mb": 32768,
+   "threads": 8,
+   "max_seconds_per_module": 1800.0,
+   "allow_pickle": false,
+   "skipped_hard_gate_fails": true,
+   "chunk_rows": 20000,
+   "corpus_verification": "cached",
+   "calibration_period": "earliest"
+  },
+  "report": {
+   "title": null,
+   "html": true
+  },
+  "verdict": {
+   "ready_min": 80.0,
+   "conditional_min": 60.0,
+   "min_coverage_ready": 0.75,
+   "blocked_score_cap": 49.0,
+   "default_weight": 1.0,
+   "required_for_ready": [
+    "performance"
+   ],
+   "weights": {
+    "performance": 3.0,
+    "drift": 1.5,
+    "membership_inf": 1.0,
+    "backdoor_screen": 1.0,
+    "extraction": 0.5,
+    "explanation": 1.0
+   }
+  },
+  "source_path": null
+ },
+ "environment": {
+  "python": "3.11.9",
+  "platform": "Linux-5.14.0-687.12.1.el9_8.x86_64-x86_64-with-glibc2.34",
+  "cpu_count": 28,
+  "libraries": {
+   "numpy": "2.4.0",
+   "scipy": "1.16.2",
+   "sklearn": "1.9.0",
+   "lightgbm": "4.7.0",
+   "xgboost": "3.2.0",
+   "shap": "0.51.0",
+   "art": "1.20.0",
+   "modelscan": "0.8.8",
+   "onnxruntime": "1.23.0",
+   "tesseract": "0.9",
+   "lief": null,
+   "pefile": null,
+   "jinja2": "3.1.6",
+   "pydantic": "2.11.9"
+  }
+ },
+ "sandbox": {
+  "enabled": true,
+  "backend": "bwrap",
+  "network_isolated": true,
+  "note": "worker never started"
+ },
+ "modules": [
+  {
+   "module_id": "file_safety",
+   "code": "M0",
+   "title": "Model file safety",
+   "status": "fail",
+   "gate": "hard",
+   "gate_outcome": "failed",
+   "finding": "gbdt.pkl is a pickle and --allow-pickle was not given, so the model was never loaded. Re-export it in a non-executable format (LightGBM: booster.save_model('model.txt'); XGBoost: save_model('model.ubj'); sklearn: skl2onnx) and re-run.",
+   "metrics": {
+    "n_artifacts": 1,
+    "n_pickle": 1,
+    "n_critical": 0,
+    "n_high": 0,
+    "n_medium": 0,
+    "n_low": 0,
+    "scanner": "modelscan",
+    "scanner_version": "0.8.8"
+   },
+   "checks": [
+    {
+     "name": "n_critical",
+     "metric": "n_critical",
+     "op": "<=",
+     "threshold": 0.0,
+     "value": 0.0,
+     "passed": true,
+     "description": "no CRITICAL scanner findings",
+     "ideal": null,
+     "floor": null,
+     "scale": "linear",
+     "score": null
+    },
+    {
+     "name": "pickle_refused",
+     "metric": "pickle_refused",
+     "op": "==",
+     "threshold": 0.0,
+     "value": 1.0,
+     "passed": false,
+     "description": "no pickle artifact without --allow-pickle",
+     "ideal": null,
+     "floor": null,
+     "scale": "linear",
+     "score": 0.0
+    }
+   ],
+   "params": {
+    "fail_on": "HIGH",
+    "scan_adapter_dir": true
+   },
+   "details": {
+    "abort": true,
+    "artifacts": [
+     {
+      "path": "/scratch/researcher/adapter/model/gbdt.pkl",
+      "format": "pickle",
+      "is_pickle": true,
+      "scanned": true,
+      "findings": [
+       {
+        "severity": "MEDIUM",
+        "description": "pickle protocol 4 stream; loading executes code",
+        "operator": "GLOBAL",
+        "module": "sklearn.ensemble._gb"
+       }
+      ]
+     }
+    ]
+   },
+   "artifacts": [
+    "file_safety.artifacts",
+    "file_safety.findings"
+   ],
+   "notes": [],
+   "screening": false,
+   "score": 0.0,
+   "skip_reason": null,
+   "error": null,
+   "duration_s": 0.41,
+   "seed": 317354736
+  },
+  {
+   "module_id": "performance",
+   "code": "M1",
+   "title": "Performance & calibration",
+   "status": "skipped",
+   "gate": "hard",
+   "gate_outcome": "not_evaluated",
+   "finding": "Not run — run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "metrics": {},
+   "checks": [],
+   "params": {},
+   "details": {},
+   "artifacts": [],
+   "notes": [],
+   "screening": false,
+   "score": null,
+   "skip_reason": "run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "error": null,
+   "duration_s": 0.0,
+   "seed": null
+  },
+  {
+   "module_id": "drift",
+   "code": "M2",
+   "title": "Temporal drift",
+   "status": "skipped",
+   "gate": "warn",
+   "gate_outcome": "not_evaluated",
+   "finding": "Not run — run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "metrics": {},
+   "checks": [],
+   "params": {},
+   "details": {},
+   "artifacts": [],
+   "notes": [],
+   "screening": false,
+   "score": null,
+   "skip_reason": "run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "error": null,
+   "duration_s": 0.0,
+   "seed": null
+  },
+  {
+   "module_id": "membership_inf",
+   "code": "M4",
+   "title": "Membership inference",
+   "status": "skipped",
+   "gate": "warn",
+   "gate_outcome": "not_evaluated",
+   "finding": "Not run — run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "metrics": {},
+   "checks": [],
+   "params": {},
+   "details": {},
+   "artifacts": [],
+   "notes": [],
+   "screening": false,
+   "score": null,
+   "skip_reason": "run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "error": null,
+   "duration_s": 0.0,
+   "seed": null
+  },
+  {
+   "module_id": "backdoor_screen",
+   "code": "M5",
+   "title": "Backdoor / poisoning screen",
+   "status": "skipped",
+   "gate": "warn",
+   "gate_outcome": "not_evaluated",
+   "finding": "Not run — run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "metrics": {},
+   "checks": [],
+   "params": {},
+   "details": {},
+   "artifacts": [],
+   "notes": [],
+   "screening": true,
+   "score": null,
+   "skip_reason": "run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "error": null,
+   "duration_s": 0.0,
+   "seed": null
+  },
+  {
+   "module_id": "explanation",
+   "code": "M7",
+   "title": "Explanation & spurious-feature reliance",
+   "status": "skipped",
+   "gate": "warn",
+   "gate_outcome": "not_evaluated",
+   "finding": "Not run — run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "metrics": {},
+   "checks": [],
+   "params": {},
+   "details": {},
+   "artifacts": [],
+   "notes": [],
+   "screening": false,
+   "score": null,
+   "skip_reason": "run aborted by M0: gbdt.pkl is a pickle and --allow-pickle was not given",
+   "error": null,
+   "duration_s": 0.0,
+   "seed": null
+  }
+ ],
+ "artifacts": {
+  "file_safety.artifacts": {
+   "type": "table",
+   "module": "file_safety",
+   "name": "artifacts",
+   "title": "Scanned model artifacts",
+   "columns": [
+    "file",
+    "format",
+    "pickle",
+    "declared",
+    "sha256 (prefix)",
+    "modelscan",
+    "worst finding"
+   ],
+   "rows": [
+    [
+     "gbdt.pkl",
+     "Python pickle",
+     "yes",
+     "yes",
+     "2c1e55ac76fce4cd",
+     "scanned",
+     "MEDIUM"
+    ]
+   ],
+   "truncated": false,
+   "note": ""
+  },
+  "file_safety.findings": {
+   "type": "table",
+   "module": "file_safety",
+   "name": "findings",
+   "title": "File-safety findings",
+   "columns": [
+    "file",
+    "severity",
+    "finding",
+    "reported by"
+   ],
+   "rows": [
+    [
+     "gbdt.pkl",
+     "MEDIUM",
+     "pickle protocol 4 stream; loading executes code (GLOBAL sklearn.ensemble._gb)",
+     "modelscan, malvalid opcode scan"
+    ]
+   ],
+   "truncated": false,
+   "note": ""
+  }
+ },
+ "warnings": [
+  "model was never loaded: M0 aborted the run"
+ ],
+ "disclaimers": [
+  "malvalid is a pre-deployment screen for a researcher's own detector, not a certification.",
+  "Screening modules (M5) can only find evidence of a problem; absence of findings is not proof of absence.",
+  "Scores depend on the canonical corpus and on the thresholds in your gate configuration, which are policy choices."
+ ]
+}

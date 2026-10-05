@@ -1,0 +1,85 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% set backends = backends or {} %}
+{% set environment = environment or {} %}
+{% set settings = settings or {} %}
+{% set choice = backends|sandbox_choice %}
+{% set known = ["bwrap", "unshare", "subprocess"] %}
+{% set backend_text = {
+  "bwrap": "bubblewrap: network, PID and file-system isolation (read-only root, home hidden). The strongest option.",
+  "unshare": "Linux namespaces via unshare: network and PID isolation, but the file system is not restricted.",
+  "subprocess": "A plain child process with resource limits and pickle guards only: no network or file-system isolation.",
+} %}
+{% block title %}System{% endblock %}
+{% block content %}
+<div class="page-head">
+<div>
+<h1>System</h1>
+<p class="lede">How submitted models are isolated on this machine, how this server is configured, and the library versions every report records.</p>
+</div>
+</div>
+
+<section class="card" aria-labelledby="sb-h">
+<div class="section-title"><h2 id="sb-h">Sandbox</h2><p class="small muted">Same probe as <code>malvalid sandbox-check</code>.</p></div>
+{% if not backends %}
+<p class="muted">The sandbox backends were not probed.</p>
+{% else %}
+{% if choice in ("bwrap", "unshare") %}
+<p class="callout tone-good">{{ ui.icon("i-lock") }}<span>Models load under <strong>{{ choice }}</strong> (<code>runtime.sandbox_backend: auto</code>){% if choice == "bwrap" %}: no network, a read-only root and a hidden home directory.{% else %}: the network is isolated but the file system is <strong>not</strong> restricted. Install bubblewrap for full isolation.{% endif %}</span></p>
+{% else %}
+{% if reduced_isolation %}<p class="callout tone-warning" data-reduced-isolation>{{ ui.icon("i-warn") }}<span><strong>Reduced isolation: this platform has no OS sandbox.</strong> Models run in a separate worker process with pickle refusal and resource limits, but without network or file-system isolation, and every report is marked <code>isolation: process_only</code>. Only evaluate models whose origin you trust; for untrusted models use Linux with bubblewrap (or WSL2).</span></p>{% else %}<p class="callout tone-critical">{{ ui.icon("i-warn") }}<span><strong>No isolating backend works here.</strong> Runs refuse to load a model unless the server was started with <code>--allow-reduced-isolation</code>, which runs it as a plain subprocess with network access (<code>isolation: process_only</code>). Install bubblewrap (<code>bwrap</code>) or enable unprivileged user namespaces before evaluating models you did not train.</span></p>{% endif %}
+{% endif %}
+<div class="grid-cards">
+{% for name, b in backends|dictsort %}
+<section class="card backend-card{% if name == choice %} is-choice{% endif %}" aria-labelledby="be-{{ loop.index }}-h">
+<div class="item-head">
+<h3 id="be-{{ loop.index }}-h"><code>{{ name }}</code>{% if name == choice %} <span class="badge best">{{ ui.icon("i-check") }}<span>used by default</span></span>{% endif %}</h3>
+{% if b.available %}{{ ui.chip("tone-good", "i-pass", "Works") }}{% else %}{{ ui.chip("tone-neutral", "i-skip", "Unavailable") }}{% endif %}
+</div>
+{% if name in backend_text %}<p class="small muted">{{ backend_text[name] }}</p>{% endif %}
+{% if b.detail %}<p class="small wrap-any">{{ b.detail }}</p>{% endif %}
+<ul class="flag-list">
+<li>{% if b.network_isolated %}<span class="yes">{{ ui.icon("i-pass") }}</span> Network isolated{% else %}<span class="no">{{ ui.icon("i-fail") }}</span> Network not isolated{% endif %}</li>
+{% if b.pid_namespace is not none and b.pid_namespace is defined %}<li>{% if b.pid_namespace %}<span class="yes">{{ ui.icon("i-pass") }}</span> Own process namespace{% else %}<span class="no">{{ ui.icon("i-fail") }}</span> Shares the process namespace{% endif %}</li>{% endif %}
+{% if b.readonly_root is not none and b.readonly_root is defined %}<li>{% if b.readonly_root %}<span class="yes">{{ ui.icon("i-pass") }}</span> Read-only file system{% else %}<span class="no">{{ ui.icon("i-fail") }}</span> File system writable{% endif %}</li>{% endif %}
+{% if b.home_hidden is not none and b.home_hidden is defined %}<li>{% if b.home_hidden %}<span class="yes">{{ ui.icon("i-pass") }}</span> Home directory hidden{% else %}<span class="no">{{ ui.icon("i-fail") }}</span> Home directory visible{% endif %}</li>{% endif %}
+</ul>
+{% if b.path or b.version %}<p class="small muted wrap-any">{% if b.version %}{{ b.version }}{% endif %}{% if b.path %}{% if b.version %} · {% endif %}<code>{{ b.path }}</code>{% endif %}</p>{% endif %}
+</section>
+{% endfor %}
+</div>
+{% endif %}
+</section>
+
+<div class="grid-2">
+<section class="card" aria-labelledby="srv-h">
+<h2 id="srv-h">This server</h2>
+{% set items = settings|public_items %}
+{% if items %}
+<table class="kvt"><tbody>
+{% for k, v in items %}<tr><th scope="row"><code>{{ k }}</code></th><td>{% if v is sameas true %}yes{% elif v is sameas false %}no{% elif v is none %}<span class="muted">not set</span>{% elif v is integer %}{{ v }}{% elif v is sequence and v is not string and v is not mapping %}<span class="wrap-any">{{ v|join(", ") }}</span>{% else %}<span class="wrap-any">{{ v|fmt_value(300) }}</span>{% endif %}</td></tr>
+{% endfor %}
+</tbody></table>
+{% else %}<p class="muted small">No settings recorded.</p>{% endif %}
+{% if settings.allow_remote|truthy %}<p class="callout tone-critical small">{{ ui.icon("i-warn") }}<span><strong>Remote access is on.</strong> This server has no TLS and is protected only by its access token, and it runs submitted models. Use it on trusted networks only.</span></p>{% endif %}
+<p class="small muted">The access token is never shown here. Restart <code>malvalid serve</code> to change these settings.</p>
+</section>
+
+<section class="card" aria-labelledby="env-h">
+<h2 id="env-h">Environment</h2>
+{% set libs = environment.libraries if environment.libraries is mapping else {} %}
+<dl class="facts">
+{% for k, v in environment|public_items %}{% if k != "libraries" %}<dt>{{ k|replace("_", " ") }}</dt><dd class="wrap-any">{% if v is mapping %}{% for k2, v2 in v|dictsort %}<code>{{ k2 }}</code>={{ v2|fmt_value(120) }}{% if not loop.last %}, {% endif %}{% else %}<span class="muted">none</span>{% endfor %}{% else %}{{ v|fmt_value(300) }}{% endif %}</dd>{% endif %}
+{% endfor %}
+</dl>
+{% if libs %}
+<h3 class="small muted">Libraries</h3>
+<table class="kvt"><tbody>
+{% for k, v in libs|dictsort %}<tr><th scope="row"><code>{{ k }}</code></th><td>{% if v %}{{ v }}{% else %}<span class="muted">not installed</span>{% endif %}</td></tr>
+{% endfor %}
+</tbody></table>
+{% endif %}
+{% if not environment %}<p class="muted small">No environment details recorded.</p>{% endif %}
+</section>
+</div>
+{% endblock %}
