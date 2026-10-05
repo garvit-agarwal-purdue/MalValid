@@ -71,9 +71,22 @@ def _probe():
             f.write("malvalid sandbox test")
 
     def home_listable():
+        # Succeeds if anything of the real home directory is visible. Bind mounts do not count: bwrap
+        # re-exposes the Python environment, adapter and model read-only when they live under $HOME
+        # (e.g. a checkout in /home/runner/work on CI), and the directories leading to them are empty.
         home = pwd.getpwuid(os.getuid()).pw_dir
-        if not os.listdir(home):
-            raise OSError("empty")
+
+        def visible(d, depth=0):
+            for name in os.listdir(d):
+                q = os.path.join(d, name)
+                if os.path.ismount(q):
+                    continue
+                if os.path.islink(q) or not os.path.isdir(q) or depth > 32 or visible(q, depth + 1):
+                    return True
+            return False
+
+        if not visible(home):
+            raise OSError("nothing of $HOME is visible")
 
     def pickle_refused():
         try:

@@ -8,6 +8,7 @@ components) are replaced by fake modules in ``sys.modules`` so these tests pin t
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import types
@@ -79,7 +80,8 @@ class TestRoot:
 
     def test_run_help(self):
         r = invoke("run", "--help")
-        out = " ".join(r.stdout.split())
+        # Typer forces Rich terminal styling when GITHUB_ACTIONS is set, which splits "--adapter" with ANSI codes.
+        out = " ".join(re.sub(r"\x1b\[[0-9;]*m", "", r.stdout).split())
         assert r.exit_code == 0
         assert "production-readiness verdict" in out
         for opt in ("--adapter", "--config", "--out", "--allow-pickle", "--model", "--class", "--only", "--skip",
