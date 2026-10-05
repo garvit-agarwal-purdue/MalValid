@@ -20,6 +20,8 @@ and the double-click launchers start the web UI without a Python install.
 
 Status: `0.1.0`, alpha. Apache-2.0.
 
+Live overview and sample report: <https://garvit-agarwal-purdue.github.io/MalValid/>
+
 ![The MalValid web UI: upload a model file](docs/images/upload-page.png)
 
 ## Contents

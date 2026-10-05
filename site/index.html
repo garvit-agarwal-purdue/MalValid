@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MalValid: a pre-deployment gate for malware-detection models</title>
+<meta name="description" content="MalValid checks a trained malware-detection model before you ship it. Upload the model file, get a READY / CONDITIONAL / NOT_READY / BLOCKED verdict, a 0-100 score and a self-contained report. Free, open source, runs locally.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="MalValid: a pre-deployment gate for malware-detection models">
+<meta property="og:description" content="Upload your model file, get a verdict and a 0-100 readiness score before you ship it. Click through a real sample report.">
+<meta property="og:url" content="https://garvit-agarwal-purdue.github.io/MalValid/">
+<meta property="og:image" content="https://garvit-agarwal-purdue.github.io/MalValid/assets/demo-report.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <span class="badge">v0.1.0 &middot; alpha &middot; Apache-2.0</span>
+  <h1>MalValid</h1>
+  <p class="lead">A pre-deployment gate for malware-detection models: upload your model file, get a verdict and a 0-100 readiness score before you ship it.</p>
+  <div class="btns">
+    <a class="btn primary" href="demo/report.html">View sample report</a>
+    <a class="btn" href="https://github.com/garvit-agarwal-purdue/MalValid">Get it on GitHub</a>
+  </div>
+  <p class="note">MalValid is not a malware scanner. It checks a <em>detector</em> you trained, against your own deployment policy. It never downloads, generates or stores malware.</p>
+</div></header>
+
+<section id="checks"><div class="wrap">
+  <h2>What it checks</h2>
+  <p>A battery of tests, each scored against a YAML policy of thresholds and weights that you control.</p>
+  <div class="grid">
+    <div class="card"><h3><code class="id">M0</code> File safety</h3><p>Is it safe to even open the model file? Scanned before anything is deserialized. Hard gate.</p></div>
+    <div class="card"><h3><code class="id">M1</code> Performance</h3><p>False-positive and detection rates at your threshold, plus calibration, ROC/PR and AUROC. Hard gate.</p></div>
+    <div class="card"><h3><code class="id">M2</code> Drift</h3><p>How fast quality decays on samples newer than your training cutoff (time-window AUT(F1)).</p></div>
+    <div class="card"><h3><code class="id">M4</code> Membership inference</h3><p>Can someone with query access tell which files were in your training set?</p></div>
+    <div class="card"><h3><code class="id">M5</code> Backdoor screen</h3><p>Looks for evidence the model was trained to wave through marked malware. A screening test: no finding is not proof of a clean model.</p></div>
+    <div class="card"><h3><code class="id">M6</code> Extraction</h3><p>How cheaply the model could be cloned through its verdicts. Off by default.</p></div>
+    <div class="card"><h3><code class="id">M7</code> Explanation</h3><p>Do decisions rest on features an attacker can set for free, or on one dominant feature? Tree gain and SHAP.</p></div>
+  </div>
+  <p class="note">Supported model files: LightGBM text, XGBoost JSON/UBJSON, and ONNX. M3 is not part of this release.</p>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><strong>Upload your model.</strong> Most submissions need only the model file; no code to write.</li>
+    <li><strong>Sandboxed checks.</strong> The file is scanned first, then loaded and queried in a no-network sandbox against a fixed, hash-pinned corpus of feature vectors.</li>
+    <li><strong>Verdict, score and report.</strong> One of <code>READY</code>, <code>CONDITIONAL</code>, <code>NOT_READY</code> or <code>BLOCKED</code>, a 0-100 score, a <code>report.json</code>, a self-contained <code>report.html</code>, and an exit code a CI job can act on.</li>
+  </ol>
+  <div class="tablewrap"><table>
+    <tr><th>Verdict</th><th>Meaning</th></tr>
+    <tr><td><code>READY</code></td><td>Score at least 80, no gate failed, enough of the battery ran.</td></tr>
+    <tr><td><code>CONDITIONAL</code></td><td>Score at least 60, but something needs a human decision.</td></tr>
+    <tr><td><code>NOT_READY</code></td><td>Score below 60, or nothing could be scored.</td></tr>
+    <tr><td><code>BLOCKED</code></td><td>A hard gate failed, a test errored, or the file was unsafe to open. Score capped at 49.</td></tr>
+  </table></div>
+</div></section>
+
+<section id="sample"><div class="wrap">
+  <h2>Sample report</h2>
+  <p>This is a real report from the synthetic demo bundled with the repository. It ends <code>BLOCKED</code> with a score of 45.2 on purpose: the demo's threshold fails the hard false-positive and detection gate. It checks the pipeline and says nothing about a real model.</p>
+  <figure>
+    <a href="demo/report.html"><img src="assets/demo-report.png" alt="A finished synthetic-demo run in the MalValid web UI, showing a BLOCKED verdict and score" loading="lazy"></a>
+    <figcaption>A finished synthetic-demo run in the web UI.</figcaption>
+  </figure>
+  <p><a class="btn primary" href="demo/report.html">Open the full interactive report</a></p>
+  <figure>
+    <img src="assets/upload-page.png" alt="The MalValid web UI upload page" loading="lazy">
+    <figcaption>The local web UI: upload a model file.</figcaption>
+  </figure>
+</div></section>
+
+<section id="install"><div class="wrap">
+  <h2>Install and run locally</h2>
+  <p>MalValid runs on your own machine. It is installed from a source checkout (it is not on PyPI).</p>
+
+  <h3>Option 1: double-click launcher (no Python needed)</h3>
+  <p>Download the ZIP from the repository (<strong>Code &rarr; Download ZIP</strong>, extract all of it) or clone it, then double-click the launcher for your system in <code>launchers/</code>:</p>
+  <div class="tablewrap"><table>
+    <tr><th>System</th><th>Launcher</th></tr>
+    <tr><td>Windows 10 / 11 (x64), Windows 11 on Arm</td><td><code>launchers\malvalid.bat</code></td></tr>
+    <tr><td>macOS</td><td><code>launchers/malvalid.command</code></td></tr>
+    <tr><td>Linux</td><td><code>launchers/malvalid.desktop</code>, or run <code>launchers/malvalid.sh</code></td></tr>
+  </table></div>
+  <p>The first start sets everything up in a private per-user folder (a few minutes, internet needed). Your browser then opens on MalValid; click <strong>Run the synthetic demo</strong> to see a full run, or upload your model under <strong>New run</strong>.</p>
+
+  <h3>Option 2: command line</h3>
+  <p>Python 3.11 or newer, from a source checkout:</p>
+  <div class="code"><pre><code>git clone https://github.com/garvit-agarwal-purdue/MalValid.git &amp;&amp; cd MalValid
+python3.11 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -c constraints/lock-py311.txt -e ".[onnx,featurize,web]"
+malvalid --version
+malvalid sandbox-check        # which isolation backends work on this machine</code></pre></div>
+
+  <h3>Start the web UI</h3>
+  <div class="code"><pre><code>malvalid serve</code></pre></div>
+  <p class="note">It prints a private link and opens your browser. The server listens on 127.0.0.1 only.</p>
+
+  <h3>Run the synthetic demo</h3>
+  <div class="code"><pre><code>cd examples/synthetic_demo
+python train.py                       # train the demo LightGBM model (a few seconds)
+malvalid run --model model.txt --threshold 0.963108 --training-cutoff 2017-12-28 \
+    --training-hashes train_sha256.txt --config gate.yaml --out runs/demo</code></pre></div>
+  <p>Then open <code>runs/demo/report.html</code>. It ends <code>BLOCKED</code> with score 45.2 and exit code 1, which is the intended outcome.</p>
+</div></section>
+
+<section id="requirements"><div class="wrap">
+  <h2>Requirements</h2>
+  <ul>
+    <li>Python 3.11 or newer for the command line (the launchers can set up Python 3.11 for you).</li>
+    <li>About 1.5 GB of disk space and an internet connection for the first run.</li>
+    <li><strong>Linux:</strong> install bubblewrap (<code>sudo apt-get install bubblewrap</code>) for the full OS sandbox: no network, read-only file system, home directory hidden.</li>
+    <li><strong>macOS and Windows:</strong> no OS sandbox is available, so models run with <strong>reduced isolation</strong> (separate worker process and resource limits, but no network or file-system isolation). Use it for models you trained yourself or trust. This is shown in every report.</li>
+    <li>macOS needs <code>brew install libomp</code> for LightGBM and XGBoost; Windows needs the Microsoft Visual C++ Redistributable (x64).</li>
+  </ul>
+  <p class="note">The real EMBER evaluation corpora (about 5-10 GB each) are not shipped and are built once from the official releases; the synthetic demo needs no downloads. Windows and macOS have not yet been tested end to end on real machines, per the README.</p>
+</div></section>
+
+<footer><div class="wrap">
+  MalValid 0.1.0 &middot; <a href="https://github.com/garvit-agarwal-purdue/MalValid/blob/main/LICENSE">Apache-2.0 licence</a> &middot;
+  <a href="https://github.com/garvit-agarwal-purdue/MalValid">GitHub</a> &middot;
+  <a href="https://github.com/garvit-agarwal-purdue/MalValid/blob/main/SECURITY.md">Security policy</a>
+</div></footer>
+<script>
+document.querySelectorAll('.code').forEach(function(b){
+  var btn=document.createElement('button');btn.type='button';btn.className='copy';btn.textContent='Copy';
+  btn.addEventListener('click',function(){
+    var t=b.querySelector('pre').innerText;
+    var done=function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1500)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){})}
+  });
+  b.appendChild(btn);
+});
+</script>
+</body>
+</html>
