@@ -9,6 +9,7 @@ import html as htmllib
 import importlib
 import importlib.util
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -79,12 +80,48 @@ def test_fixture_is_valid_report_json(variant: str) -> None:
     assert rep["verdict"]["verdict"] == expected
 
 
+def _drift(built: Any, committed: Any, path: str = "") -> list[str]:
+    """Differences between two JSON values; floats compare to ~1e-9 relative (see below)."""
+    if isinstance(built, bool) or isinstance(committed, bool) or not (
+        isinstance(built, (int, float)) and isinstance(committed, (int, float))
+    ):
+        if type(built) is not type(committed):
+            return [f"{path or '/'}: {built!r:.80} != {committed!r:.80}"]
+    if isinstance(built, dict):
+        out = [f"{path}/{k}: only in one of them" for k in sorted(set(built) ^ set(committed))]
+        for k in sorted(set(built) & set(committed)):
+            out += _drift(built[k], committed[k], f"{path}/{k}")
+        return out
+    if isinstance(built, list):
+        if len(built) != len(committed):
+            return [f"{path}: length {len(built)} != {len(committed)}"]
+        return [d for i, (a, b) in enumerate(zip(built, committed)) for d in _drift(a, b, f"{path}[{i}]")]
+    if isinstance(built, float) or isinstance(committed, float):
+        ok = math.isclose(built, committed, rel_tol=1e-9, abs_tol=1e-12)
+    else:
+        ok = built == committed
+    return [] if ok else [f"{path or '/'}: {built!r:.80} != {committed!r:.80}"]
+
+
 def test_fixtures_match_generator() -> None:
-    """The committed fixtures are exactly what make_sample_report.py produces (no drift)."""
+    """The committed fixtures are what make_sample_report.py produces (no drift).
+
+    Floats are compared to ~1e-9 relative, not bit for bit: numpy picks SIMD kernels by CPU (AVX-512 or
+    not), so the generator's unrounded chart series differ in the last ulp between machines, e.g. on
+    GitHub runners of different CPU types. Real drift (a changed value, key or string) still fails.
+    """
     gen = _generator()
     for variant, name in VARIANT_FILES.items():
         built = json.loads(json.dumps(gen.build_report(variant), allow_nan=False))
-        assert built == _load(variant), f"{name} is stale: re-run tests/fixtures/make_sample_report.py"
+        drift = _drift(built, _load(variant))
+        assert not drift, f"{name} is stale: re-run tests/fixtures/make_sample_report.py\n" + "\n".join(drift[:20])
+
+
+def test_fixture_drift_check_ignores_only_float_rounding() -> None:
+    assert _drift({"a": [0.8829675244250249, 1, "x"]}, {"a": [0.882967524425025, 1, "x"]}) == []
+    assert _drift({"a": [0.8829675244250249]}, {"a": [0.8829]})
+    assert _drift({"a": 1}, {"a": True}) and _drift({"a": "x"}, {"a": "y"}) and _drift({"a": 1}, {"b": 1})
+    assert _drift([1, 2], [1, 2, 3]) and _drift({"a": None}, {"a": 0.0})
 
 
 def test_kitchen_sink_covers_every_chart_and_state() -> None:

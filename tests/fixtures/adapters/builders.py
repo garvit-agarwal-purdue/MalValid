@@ -43,7 +43,10 @@ def make_adapter_dir(tmp_path: Path, adapter: str, *, model: str | None = "lgbm"
     shutil.copy(HERE / f"{adapter}.py", dst)
     c = toy_corpus()
     if model == "lgbm":
-        (d / "model.txt").write_text(toy_booster_text())
+        # newline="": LightGBM text models must keep LF line endings. Text-mode writes on Windows turn
+        # them into CRLF, which breaks the per-tree byte offsets (tree_sizes) and makes
+        # lgb.Booster(model_file=...) abort the interpreter ("Model format error, expect a tree here").
+        (d / "model.txt").write_text(toy_booster_text(), encoding="utf-8", newline="")
     elif model == "joblib":
         import joblib
         from sklearn.ensemble import GradientBoostingClassifier

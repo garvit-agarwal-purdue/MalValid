@@ -41,6 +41,13 @@ def _pol(**kw) -> SandboxPolicy:
     return SandboxPolicy(threads=1, memory_mb=4096, **kw)
 
 
+def test_fixture_lightgbm_model_keeps_lf_line_endings(tmp_path: Path) -> None:
+    # A CRLF LightGBM text model (a text-mode write on Windows) makes lgb.Booster(model_file=...) abort the
+    # interpreter, which took down the whole Windows test run.
+    data = (make_adapter_dir(tmp_path, "toolbox_adapter").parent / "model.txt").read_bytes()
+    assert data.startswith(b"tree") and b"\r" not in data
+
+
 # ---- policy -----------------------------------------------------------------------------------------
 
 
@@ -112,7 +119,7 @@ def test_model_path_override(tmp_path: Path) -> None:
     adapter = make_adapter_dir(tmp_path, "toolbox_adapter")
     other = tmp_path / "elsewhere" / "other.txt"
     other.parent.mkdir()
-    other.write_text((adapter.parent / "model.txt").read_text())
+    other.write_bytes((adapter.parent / "model.txt").read_bytes())  # byte copy: keep LF line endings
     d = inspect_adapter(adapter, _pol(), model_paths_override=[other])
     assert d.model_paths == (str(other.resolve()),)
 

@@ -45,7 +45,7 @@ jobs:
         run: |
           [ -f pytest.log ] || exit 0
           # Failures, plus the crashing test's stack if the interpreter aborted (faulthandler output).
-          { grep -E '^(FAILED|ERROR) |Interrupted|INTERNALERROR|^E   |Fatal Python error|fatal exception|^(Current thread|Thread) 0x|File ".*[\\/]tests[\\/]' pytest.log | head -n 80; echo '--- last tests started ---'; grep -E '^tests/.*::' pytest.log | tail -n 3; echo '--- summary ---'; tail -n 15 pytest.log; } > failures.txt || true
+          { grep -E '^(FAILED|ERROR) |Interrupted|INTERNALERROR|^E   |Fatal Python error|fatal exception|^(Current thread|Thread) 0x|^  File "' pytest.log | head -n 80; echo '--- last tests started ---'; grep -E '^tests/.*::' pytest.log | tail -n 3; echo '--- summary ---'; tail -n 15 pytest.log; } > failures.txt || true
           cat failures.txt >> "$GITHUB_STEP_SUMMARY"
           msg="$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' failures.txt | awk 'BEGIN{ORS="%0A"} {print}')"
           echo "::error title=pytest failures::${msg}"
@@ -77,7 +77,7 @@ jobs:
         run: |
           [ -f pytest.log ] || exit 0
           # Failures, plus the crashing test's stack if the interpreter aborted (faulthandler output).
-          { grep -E '^(FAILED|ERROR) |Interrupted|INTERNALERROR|^E   |Fatal Python error|fatal exception|^(Current thread|Thread) 0x|File ".*[\\/]tests[\\/]' pytest.log | head -n 80; echo '--- last tests started ---'; grep -E '^tests/.*::' pytest.log | tail -n 3; echo '--- summary ---'; tail -n 15 pytest.log; } > failures.txt || true
+          { grep -E '^(FAILED|ERROR) |Interrupted|INTERNALERROR|^E   |Fatal Python error|fatal exception|^(Current thread|Thread) 0x|^  File "' pytest.log | head -n 80; echo '--- last tests started ---'; grep -E '^tests/.*::' pytest.log | tail -n 3; echo '--- summary ---'; tail -n 15 pytest.log; } > failures.txt || true
           cat failures.txt >> "$GITHUB_STEP_SUMMARY"
           msg="$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' failures.txt | awk 'BEGIN{ORS="%0A"} {print}')"
           echo "::error title=pytest failures::${msg}"
