@@ -610,3 +610,19 @@ class TestValidateAdapter:
         a.write_text("")
         r = invoke("validate-adapter", "--adapter", a)
         assert r.exit_code == 2 and "not available" in one_line_error(r)
+
+
+def test_default_out_dirs_never_collide_within_one_second(tmp_path, monkeypatch):
+    import datetime as dt
+
+    from malvalid import cli as cli_mod
+
+    class FrozenDatetime(dt.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return dt.datetime(2026, 10, 6, 12, 0, 0, tzinfo=dt.timezone.utc)
+
+    monkeypatch.setattr(cli_mod.dt, "datetime", FrozenDatetime)
+    dirs = [cli_mod._new_default_out_dir(tmp_path / "malvalid-runs") for _ in range(3)]
+    assert [d.name for d in dirs] == ["20261006T120000Z", "20261006T120000Z-2", "20261006T120000Z-3"]
+    assert all(d.is_dir() for d in dirs)

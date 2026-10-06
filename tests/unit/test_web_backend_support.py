@@ -18,6 +18,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Callable
@@ -257,8 +258,8 @@ def toy_python_path(tmp_path: Path) -> Path:
 
 
 def fake_adapter(tmp_path: Path, mode: str = "ok", name: str = "my_adapter.py") -> Path:
-    d = tmp_path / f"adapter_{mode}_{time.monotonic_ns()}"
-    d.mkdir()
+    # mkdtemp, not a clock: time.monotonic_ns() ticks every ~15.6 ms on Windows, so two quick calls collided.
+    d = Path(tempfile.mkdtemp(dir=tmp_path, prefix=f"adapter_{mode}_"))
     p = d / name
     p.write_text(f"# FAKE: {mode}\nclass Detector:\n    pass\n", encoding="utf-8")
     return p

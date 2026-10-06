@@ -60,6 +60,20 @@ KILL_DRAIN_TIMEOUT_S = 10.0
 _WINDOWS = os.name == "nt"
 _ERROR_LINE = re.compile(r"^\s*error:\s*(.+?)\s*$")
 
+_seq_lock = threading.Lock()
+_last_seq = 0
+
+
+def next_seq() -> int:
+    """A strictly increasing submission sequence number (ns since the epoch where possible).
+
+    ``time.time_ns()`` alone can repeat: on Windows it advances only every ~15.6 ms, so two jobs
+    submitted in the same tick would tie and list in random order."""
+    global _last_seq
+    with _seq_lock:
+        _last_seq = max(time.time_ns(), _last_seq + 1)
+        return _last_seq
+
 
 class JobError(Exception):
     """A job operation cannot be performed (HTTP status in ``status``)."""
@@ -349,7 +363,7 @@ class JobManager:
             "schema": JOB_SCHEMA,
             "run_id": run_id,
             "created_at": iso(),
-            "seq": time.time_ns(),  # orders same-second submissions (created_at has 1 s resolution)
+            "seq": next_seq(),  # orders same-second submissions (created_at has 1 s resolution)
             "started_at": None,
             "finished_at": None,
             "status": "queued",

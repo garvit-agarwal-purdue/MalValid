@@ -591,3 +591,12 @@ def test_runs_and_validation_use_the_launch_directory(tmp_path, fake_malvalid, f
     calls = read_record(fake_record)
     assert [c["cwd"] for c in calls if c["cmd"] in ("run", "validate-adapter")] == [str(launch)] * 2
     assert RunStore(s.runs_dir).unexpected_entries(rid) == []
+
+
+def test_job_seq_is_strictly_increasing_when_the_clock_does_not_advance(monkeypatch):
+    # Windows' clock advances every ~15.6 ms: same-tick submissions must not tie in the queue order.
+    from malvalid.web import jobs
+
+    monkeypatch.setattr(jobs.time, "time_ns", lambda: 1_000)
+    a, b, c = jobs.next_seq(), jobs.next_seq(), jobs.next_seq()
+    assert a < b < c

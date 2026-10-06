@@ -160,6 +160,21 @@ def _root(
     _STATE["verbose"] = verbose
 
 
+def _new_default_out_dir(root: Path = Path("malvalid-runs")) -> Path:
+    """Create and return ``<root>/<UTC time>`` (``-2``, ``-3``, ... if a run started in the same second
+    already took it). Created exclusively, so two runs started together never share a directory."""
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    root.mkdir(parents=True, exist_ok=True)
+    for i in range(1, 10000):
+        p = root / (stamp if i == 1 else f"{stamp}-{i}")
+        try:
+            p.mkdir()
+        except FileExistsError:
+            continue
+        return p
+    raise RuntimeError(f"could not create a run directory under {root}")  # pragma: no cover
+
+
 def _split_ids(values: Optional[List[str]]) -> List[str]:
     out: List[str] = []
     for v in values or []:
@@ -531,7 +546,7 @@ def run_cmd(
         if title is not None and title.strip():
             overrides["report"] = {"title": " ".join(title.split())}
         cfg = _load_cfg(config, overrides, corpus_dir)
-        out_dir = out or Path("malvalid-runs") / dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        out_dir = out or _new_default_out_dir()
         only_ids = _split_ids(only)
         notes: List[str] = []
         model_paths = list(model or [])
