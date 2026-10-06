@@ -179,7 +179,9 @@ BAD_JSON = [b"", b"{", b"not json", b"[1, 2, 3]", b'"a string"', b"null", b"\xff
             b"[" * 100000 + b"]" * 100000]
 
 
-@pytest.mark.parametrize("content", BAD_JSON)
+# Short ids: the default id embeds the 200 KB value, and pytest puts the test id in the
+# PYTEST_CURRENT_TEST environment variable, which Windows limits to 32767 characters.
+@pytest.mark.parametrize("content", BAD_JSON, ids=[f"bad{i}" for i in range(len(BAD_JSON))])
 def test_malformed_files_are_treated_as_absent(store, content):
     d = cli_run_dir(store.root, "cli-good", REPORTS["ready"])
     (d / "progress.json").write_bytes(content)

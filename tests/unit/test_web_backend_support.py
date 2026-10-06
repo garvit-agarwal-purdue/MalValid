@@ -277,7 +277,7 @@ def cli_run_dir(runs: Path, run_id: str, report_fixture: str | None = None, **fi
         elif isinstance(content, bytes):
             p.write_bytes(content)
         else:
-            p.write_text(str(content))
+            p.write_bytes(str(content).encode("utf-8"))  # byte for byte: no CRLF translation on Windows
     return d
 
 

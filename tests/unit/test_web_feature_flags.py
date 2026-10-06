@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import stat
@@ -200,7 +201,7 @@ def test_the_flags_enable_path_mode_and_no_sandbox(open_app: Any, secret_file: P
                         "confirm_no_sandbox": "on"})
     rid = run_id_from(r)
     job = (s.runs_dir / rid / "job.json").read_text()
-    assert str(secret_file) in job and '"no_sandbox": true' in job
+    assert json.dumps(str(secret_file)) in job and '"no_sandbox": true' in job  # JSON-escaped (Windows backslashes)
 
 
 def test_the_bundled_demo_still_runs_without_path_mode(locked: Any) -> None:

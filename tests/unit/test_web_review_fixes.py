@@ -330,7 +330,7 @@ def test_the_demo_button_submits_a_path_mode_run(client, settings):
         pytest.skip("examples/synthetic_demo is not in this checkout")
     r = post_run(client, settings, {"mode": "path", **demo})
     job = job_json(settings, run_id_from(r))
-    assert job["mode"] == "path" and job["adapter"].endswith("synthetic_demo/adapter.py")
+    assert job["mode"] == "path" and Path(job["adapter"]).parts[-2:] == ("synthetic_demo", "adapter.py")
 
 
 # ---- ux-2: focus under the sticky bar ---------------------------------------------------------------

@@ -340,7 +340,7 @@ def test_a_new_model_file_wins_over_the_inspected_one(client, settings, inspect_
     rid = run_id_from(model_run(client, settings, {"model_submission": sid},
                                 [("model_file", ("new.txt", LGBM_STUB + b"\n"))]))
     job = job_json(settings, rid)
-    assert argv_value(job["argv"], "--model").endswith("/new.txt")
+    assert Path(argv_value(job["argv"], "--model")).name == "new.txt"
     assert not (settings.runs_dir / "submissions" / sid).exists()
 
 
