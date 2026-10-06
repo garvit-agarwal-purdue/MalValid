@@ -119,7 +119,7 @@ def test_a_run_goes_from_queued_to_finished(client, app, settings, tmp_path, fak
     for k in ("argv", "mode", "adapter", "display_name", "submission_id", "options"):
         assert k in job
     run_dir = settings.runs_dir / rid
-    console = (run_dir / "console.log").read_text()
+    console = (run_dir / "console.log").read_bytes().decode("utf-8")  # as served: CRLF on Windows
     assert console.startswith("$ ") and "fake malvalid run: done" in console
     call = [c for c in read_record(fake_record) if c["cmd"] == "run"][-1]
     # The directory malvalid serve was started in (like `malvalid run` typed there), never the run dir.
@@ -504,7 +504,7 @@ def test_real_toy_run_through_the_web_ui(tmp_path, toy_python_path, app):
         assert c.get(f"/runs/{rid}").status_code == 200
         job = wait_status(s, rid, timeout=300)
         run_dir = runs / rid
-        console = (run_dir / "console.log").read_text()
+        console = (run_dir / "console.log").read_bytes().decode("utf-8")  # as served: CRLF on Windows
         assert job["status"] == "finished", (job, console[-3000:])
         assert job["exit_code"] in (0, 1)
 

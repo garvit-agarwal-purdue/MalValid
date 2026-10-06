@@ -134,14 +134,17 @@ def test_serve_end_to_end(tmp_path):
         assert "httponly" in cookie.lower()
         assert runs.is_dir()
     finally:
-        proc.send_signal(signal.SIGINT)
+        if os.name == "nt":
+            proc.terminate()  # Windows cannot deliver SIGINT to a child process
+        else:
+            proc.send_signal(signal.SIGINT)
         try:
             proc.wait(timeout=30)
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait()
     err = proc.stderr.read() if proc.stderr else ""
-    assert proc.returncode == 0, err
+    assert proc.returncode == 0 or os.name == "nt", err  # graceful SIGINT shutdown (POSIX)
     assert TOKEN not in err  # no access log carrying the login URL
 
 

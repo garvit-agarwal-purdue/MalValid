@@ -157,6 +157,7 @@ def test_verdict_isolation_field() -> None:
 
 
 @pytest.mark.skipif(not hasattr(signal, "SIGHUP"), reason="no SIGHUP on this platform")
+@pytest.mark.posix  # SIGHUP does not exist on Windows
 def test_sighup_stops_the_server_gracefully() -> None:
     calls: list[int] = []
 

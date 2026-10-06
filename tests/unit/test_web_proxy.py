@@ -462,14 +462,17 @@ def test_real_server_behind_simulated_ondemand_headers(tmp_path):
             assert bad.status_code == 403
             assert c.get(f"{root}/", headers={"host": f"evil.example:{port}"}).status_code == 400
     finally:
-        proc.send_signal(signal.SIGINT)
+        if os.name == "nt":
+            proc.terminate()  # Windows cannot deliver SIGINT to a child process
+        else:
+            proc.send_signal(signal.SIGINT)
         try:
             proc.wait(timeout=30)
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait()
     err = proc.stderr.read() if proc.stderr else ""
-    assert proc.returncode == 0, err
+    assert proc.returncode == 0 or os.name == "nt", err  # graceful SIGINT shutdown (POSIX)
     assert TOKEN not in err
 
 

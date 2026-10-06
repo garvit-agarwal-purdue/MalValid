@@ -111,7 +111,10 @@ def test_reduced_isolation_model_reports_process_only(tmp_path: Path, no_os_sand
     assert info["isolation"] == "process_only"
     assert info["warnings"][0] == REDUCED_ISOLATION_WARNING
     assert info["pickle_guards"], "pickle refusal must stay on in reduced isolation"
-    assert info["rlimits"]["as"] == 4096 << 20
+    if os.name == "nt":  # no setrlimit there: the host puts the worker in a Job Object with a memory limit
+        assert info["rlimits"]["job"]["process_memory_mb"] == 4096
+    else:
+        assert info["rlimits"]["as"] == 4096 << 20
 
 
 def test_reduced_isolation_refused_without_flag(tmp_path: Path, no_os_sandbox: None) -> None:

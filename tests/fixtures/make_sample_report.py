@@ -28,7 +28,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import numpy as np
@@ -574,7 +574,8 @@ def _assemble(variant: str, results: list[ModuleResult], store: ArtifactStore, *
     started = dt.datetime(2026, 9, 28, 14, 2, 11, tzinfo=dt.timezone.utc)
     dur = round(sum(r.duration_s or 0 for r in results) + 17.3, 1)
     out_dir = out_dir or f"/scratch/researcher/runs/{variant}"
-    model_path = f"{Path(out_dir).parent}/adapter/model/" + (
+    # PurePosixPath: the fixture paths are POSIX on every OS (Path would give backslashes on Windows).
+    model_path = f"{PurePosixPath(out_dir).parent}/adapter/model/" + (
         "ember_xgb.json" if class_name.startswith("XGB") else "ember_lgbm.txt")
     kind = "xgboost" if class_name.startswith("XGB") else "sklearn_gbdt" if class_name.startswith("Sklearn") else "lightgbm"
     decl = {

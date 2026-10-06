@@ -442,6 +442,7 @@ class Ember2018Provider(CorpusProvider):
                 log.info("  vectorised %d / %d rows (%.0f%%, %.0f s)", done, n_total, 100 * done / n_total, el)
         except BaseException:
             if writer is not None:
+                writer.close()  # unmap X.npy first: Windows cannot delete a mapped file
                 for fn in ("X.npy", "meta.npz"):
                     (out / fn).unlink(missing_ok=True)
             raise

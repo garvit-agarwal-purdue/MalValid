@@ -420,6 +420,7 @@ class TestTimeouts:
         assert m["status"] == "error" and "exceeded 0.2 s" in m["finding"]
         assert sandbox.models[0].restarts == 0  # the timer never fired; the worker is healthy
 
+    @pytest.mark.posix  # SIGALRM / setitimer do not exist on Windows
     def test_outer_timer_restored(self, tmp_path, sandbox):
         fired = []
         prev = signal.signal(signal.SIGALRM, lambda *a: fired.append(True))

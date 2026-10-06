@@ -592,6 +592,9 @@ def test_fmt_duration(value, expected):
 
 @pytest.fixture()
 def tz(monkeypatch):
+    if not hasattr(time, "tzset"):
+        pytest.skip("time.tzset (switching the local time zone via TZ) is POSIX-only")
+
     def set_tz(name):
         monkeypatch.setenv("TZ", name)
         time.tzset()

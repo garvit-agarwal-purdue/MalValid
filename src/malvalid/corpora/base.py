@@ -244,6 +244,13 @@ class CorpusWriter:
         rows = np.asarray(rows, dtype=np.float32)
         self._X[start : start + rows.shape[0]] = rows
 
+    def close(self) -> None:
+        """Release the X.npy memmap (idempotent). Windows cannot delete a file that is still mapped,
+        so a failed build calls this before removing its partial output."""
+        X = self.__dict__.pop("_X", None)
+        if X is not None:
+            del X
+
     def finalize(
         self,
         *,
@@ -261,7 +268,7 @@ class CorpusWriter:
         extra: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         self._X.flush()
-        del self._X
+        self.close()
         sha = np.array([s.lower() for s in sha256], dtype="<U64")
         lab = np.asarray(label, dtype=np.int8)
         ts = np.asarray(timestamp, dtype="datetime64[D]")
@@ -310,14 +317,46 @@ def write_corpus(
     return w.finalize(**finalize_kwargs)
 
 
+def _windows_change_time(p: Path) -> int | None:  # pragma: no cover - Windows only
+    """NTFS ChangeTime (the POSIX ctime equivalent) of ``p``, or None if it cannot be read.
+
+    On Windows ``st_ctime`` is the creation time, which an in-place edit does not change."""
+    try:
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        class _FileBasicInfo(ctypes.Structure):
+            _fields_ = [("CreationTime", ctypes.c_int64), ("LastAccessTime", ctypes.c_int64),
+                        ("LastWriteTime", ctypes.c_int64), ("ChangeTime", ctypes.c_int64),
+                        ("FileAttributes", wintypes.DWORD)]
+
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        fn = k32.GetFileInformationByHandleEx
+        fn.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+        fn.restype = wintypes.BOOL
+        info = _FileBasicInfo()
+        with open(p, "rb") as f:
+            if not fn(msvcrt.get_osfhandle(f.fileno()), 0, ctypes.byref(info), ctypes.sizeof(info)):  # FileBasicInfo
+                return None
+        return int(info.ChangeTime)
+    except Exception:  # noqa: BLE001 - fall back to st_ctime
+        return None
+
+
 def _file_stamp(p: Path) -> list[int]:
     """What the verification cache compares: size, mtime, ctime and inode.
 
     ``os.utime`` can restore an mtime but not the ctime, and a copied or replaced file gets a new
-    inode, so an in-place edit that keeps size and mtime is re-hashed instead of trusted.
+    inode, so an in-place edit that keeps size and mtime is re-hashed instead of trusted. On Windows
+    the NTFS ChangeTime stands in for the ctime (``st_ctime`` is the creation time there).
     """
     st = p.stat()
-    return [int(st.st_size), int(st.st_mtime_ns), int(st.st_ctime_ns), int(st.st_ino)]
+    ctime = int(st.st_ctime_ns)
+    if os.name == "nt":  # pragma: no cover - Windows only
+        change = _windows_change_time(p)
+        ctime = change if change is not None else ctime
+    return [int(st.st_size), int(st.st_mtime_ns), ctime, int(st.st_ino)]
 
 
 def _utc_iso() -> str:

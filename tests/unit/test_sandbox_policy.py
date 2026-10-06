@@ -278,7 +278,8 @@ def test_basedetector_in_process_helpers(tmp_path: Path) -> None:
     with pytest.raises(AdapterError, match="native_model"):
         D().predict_proba(X)
     assert resolve_path("x.txt", tmp_path) == (tmp_path / "x.txt").resolve()
-    assert resolve_path("/abs/x.txt") == Path("/abs/x.txt")
+    absolute = Path(tmp_path.anchor) / "abs" / "x.txt"  # "/abs/x.txt" has no drive, so is relative on Windows
+    assert resolve_path(str(absolute)) == absolute
 
 
 @needs_bwrap

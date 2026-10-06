@@ -96,6 +96,7 @@ def test_pack_message_describes_payloads() -> None:
     assert segs[0][:4] == MAGIC and len(segs) == 3
 
 
+@pytest.mark.posix  # the fd Channel (os.set_blocking on pipes) is POSIX-only; Windows uses the stdio PipeChannel
 def test_channel_deadline_and_closed_peer() -> None:
     a_r, b_w = os.pipe()
     b_r, a_w = os.pipe()

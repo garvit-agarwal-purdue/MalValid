@@ -44,11 +44,18 @@ jobs:
         shell: bash
         run: |
           [ -f pytest.log ] || exit 0
-          # Failures, plus the crashing test's stack if the interpreter aborted (faulthandler output).
-          { grep -E '^(FAILED|ERROR) |Interrupted|INTERNALERROR|^E   |Fatal Python error|fatal exception|^(Current thread|Thread) 0x|^  File "' pytest.log | head -n 80; echo '--- last tests started ---'; grep -E '^tests/.*::' pytest.log | tail -n 3; echo '--- summary ---'; tail -n 15 pytest.log; } > failures.txt || true
-          cat failures.txt >> "$GITHUB_STEP_SUMMARY"
-          msg="$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' failures.txt | awk 'BEGIN{ORS="%0A"} {print}')"
-          echo "::error title=pytest failures::${msg}"
+          annotate() {  # $1 = title, stdin = text; GitHub shows ~4 KB of an annotation, so keep each one short
+            msg="$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN{ORS="%0A"} {print}')"
+            echo "::error title=$1::${msg}"
+          }
+          # 1. Every failing test id (short), 20 per annotation.
+          grep -E '^(FAILED|ERROR) ' pytest.log | cut -c1-180 > failed.txt || true
+          split -l 20 failed.txt failed_part_ || true
+          for f in failed_part_*; do [ -s "$f" ] && annotate "failed tests ($(wc -l < failed.txt) total)" < "$f"; done
+          # 2. Error lines, plus the crashing test's stack if the interpreter aborted (faulthandler output).
+          { grep -E 'Interrupted|INTERNALERROR|^E   |Fatal Python error|fatal exception|^(Current thread|Thread) 0x|^  File "' pytest.log | cut -c1-240 | head -n 40; echo '--- last tests started ---'; grep -E '^tests/.*::' pytest.log | tail -n 3 | cut -c1-200; echo '--- summary ---'; tail -n 3 pytest.log; } > failures.txt || true
+          annotate "pytest failures" < failures.txt
+          { cat failed.txt; echo; cat failures.txt; } >> "$GITHUB_STEP_SUMMARY"
 
   windows:
     # Lightweight: the OS sandbox needs Linux, so this checks that the package installs and that the fast
@@ -76,8 +83,15 @@ jobs:
         shell: bash
         run: |
           [ -f pytest.log ] || exit 0
-          # Failures, plus the crashing test's stack if the interpreter aborted (faulthandler output).
-          { grep -E '^(FAILED|ERROR) |Interrupted|INTERNALERROR|^E   |Fatal Python error|fatal exception|^(Current thread|Thread) 0x|^  File "' pytest.log | head -n 80; echo '--- last tests started ---'; grep -E '^tests/.*::' pytest.log | tail -n 3; echo '--- summary ---'; tail -n 15 pytest.log; } > failures.txt || true
-          cat failures.txt >> "$GITHUB_STEP_SUMMARY"
-          msg="$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' failures.txt | awk 'BEGIN{ORS="%0A"} {print}')"
-          echo "::error title=pytest failures::${msg}"
+          annotate() {  # $1 = title, stdin = text; GitHub shows ~4 KB of an annotation, so keep each one short
+            msg="$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN{ORS="%0A"} {print}')"
+            echo "::error title=$1::${msg}"
+          }
+          # 1. Every failing test id (short), 20 per annotation.
+          grep -E '^(FAILED|ERROR) ' pytest.log | cut -c1-180 > failed.txt || true
+          split -l 20 failed.txt failed_part_ || true
+          for f in failed_part_*; do [ -s "$f" ] && annotate "failed tests ($(wc -l < failed.txt) total)" < "$f"; done
+          # 2. Error lines, plus the crashing test's stack if the interpreter aborted (faulthandler output).
+          { grep -E 'Interrupted|INTERNALERROR|^E   |Fatal Python error|fatal exception|^(Current thread|Thread) 0x|^  File "' pytest.log | cut -c1-240 | head -n 40; echo '--- last tests started ---'; grep -E '^tests/.*::' pytest.log | tail -n 3 | cut -c1-200; echo '--- summary ---'; tail -n 3 pytest.log; } > failures.txt || true
+          annotate "pytest failures" < failures.txt
+          { cat failed.txt; echo; cat failures.txt; } >> "$GITHUB_STEP_SUMMARY"
